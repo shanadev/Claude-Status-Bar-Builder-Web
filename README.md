@@ -1,4 +1,6 @@
-# Claude Status Bar Builder
+# Hack the Claude Status Bar
+
+> **This is the web version — work in progress.** It brings the status line builder to the browser (Blazor WebAssembly) so anyone can design one online, on any OS. The original Windows desktop app lives at [Claude-Status-Bar-Builder](https://github.com/shanadev/Claude-Status-Bar-Builder); this repo is now canonical for the shared rendering core and renderer releases. README below still describes the desktop app until the web version ships.
 
 > I wanted to visually build my status bar, man.
 

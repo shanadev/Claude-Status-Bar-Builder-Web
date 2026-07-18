@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — web version of the Claude Status Bar Builder.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hack the Claude Status Bar</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="preload" href="fonts/CaskaydiaCoveNerdFontMono-Regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="xterm/xterm.css" />
+    <style>
+        @font-face {
+            font-family: 'CaskaydiaCove NFM';
+            src: url('fonts/CaskaydiaCoveNerdFontMono-Regular.ttf') format('truetype');
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100vh;
+            background: #05070a;
+            color: #d8e0e8;
+            font-family: 'CaskaydiaCove NFM', 'Cascadia Code', Consolas, monospace;
+        }
+
+        .stage {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 48px 24px;
+        }
+
+        .stage h1 {
+            color: #39ff88;
+            font-size: 1.6rem;
+            letter-spacing: 0.18em;
+            text-shadow: 0 0 12px rgba(57, 255, 136, 0.55);
+        }
+
+        .stage .tag {
+            color: #7a8794;
+            margin-bottom: 32px;
+        }
+
+        #term {
+            height: 140px;
+            padding: 10px 12px;
+            background: #101014;
+            border: 1px solid #1d2733;
+            border-radius: 6px;
+        }
+
+        /* xterm's helper textarea can flash a caret; preview is display-only */
+        .xterm-helper-textarea { opacity: 0 !important; }
+    </style>
+    <script src="xterm/xterm.js"></script>
+    <script src="xterm/addon-fit.js"></script>
+    <script src="preview.js"></script>
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>

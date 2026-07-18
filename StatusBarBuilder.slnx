@@ -3,5 +3,6 @@
     <Project Path="src/StatusBar.Builder/StatusBar.Builder.csproj" />
     <Project Path="src/StatusBar.Core/StatusBar.Core.csproj" />
     <Project Path="src/StatusBar.Renderer/StatusBar.Renderer.csproj" />
+    <Project Path="src/StatusBar.Web/StatusBar.Web.csproj" />
   </Folder>
 </Solution>

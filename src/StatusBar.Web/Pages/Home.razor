@@ -1,0 +1,25 @@
+@* Hack the Claude Status Bar — builder page (Phase 0 scaffold: default theme → Core composer → xterm preview).
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@page "/"
+@inject IJSRuntime JS
+
+<PageTitle>Hack the Claude Status Bar</PageTitle>
+
+<main class="stage">
+    <h1>HACK THE CLAUDE STATUS BAR</h1>
+    <p class="tag">Visual status line builder for Claude Code &mdash; running fully in your browser.</p>
+    <div id="term"></div>
+</main>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        var theme = DefaultTheme.Create();
+        var ctx = new SampleData().Build();
+        var text = string.Join("\n", Composer.Compose(theme, ctx));
+        var bg = Ansi.ToHex(theme.Background) ?? "#101014";
+        await JS.InvokeVoidAsync("renderStatus", text, theme.FontFamily, bg);
+    }
+}
