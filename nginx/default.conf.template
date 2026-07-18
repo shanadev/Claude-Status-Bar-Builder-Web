@@ -30,6 +30,16 @@ server {
         add_header Cache-Control "no-cache";
     }
 
+    # The install scripts are fetched with `irm | iex` / `curl | bash`. Without
+    # a text type + charset, Invoke-RestMethod can return byte[] (pwsh) or
+    # mis-decode UTF-8 as Latin-1 (PS 5.1), so force text/plain; charset=utf-8.
+    location ~ \.(ps1|sh)$ {
+        types { }
+        default_type text/plain;
+        charset utf-8;
+        try_files $uri =404;
+    }
+
     # SPA fallback: /build, /export and share links resolve client-side.
     location / {
         try_files $uri $uri/ /index.html;

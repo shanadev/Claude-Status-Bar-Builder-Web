@@ -7,7 +7,7 @@ elements together, style every piece with truecolor and powerline separators, wa
 terminal preview react to sample data, then jack out with an installer. No accounts, no
 backend: **the theme travels in the link**.
 
-**Live site:** _Railway hookup in progress — URL lands here when it's up._
+**Live site:** [claude-status-bar-builder-web-production.up.railway.app](https://claude-status-bar-builder-web-production.up.railway.app)
 
 ![The builder: element palette, row editor, style panel, and a live terminal preview](docs/web-builder.png)
 
