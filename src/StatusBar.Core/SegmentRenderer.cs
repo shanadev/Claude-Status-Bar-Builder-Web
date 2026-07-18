@@ -56,7 +56,7 @@ public static class SegmentRenderer
         void Add(string text, string? runFg = null) => runs.Add(new StyledRun(text, runFg));
         void Space() { if (runs.Count > 0) Add(" "); }
 
-        if (icon.Length > 0) { Add(icon, seg.IconFg); }
+        if (icon.Length > 0) { Add(seg.IconSpace ? icon + " " : icon, seg.IconFg); }
         if (label.Length > 0) { Space(); Add(label, seg.LabelFg); }
         if (seg.Bar is BarOptions bar && percent is double pv) { Space(); AddBar(runs, bar, pv, seg, fg); }
         if (!hideValueText)

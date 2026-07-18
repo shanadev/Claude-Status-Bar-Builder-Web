@@ -9,9 +9,10 @@ GPL-compatible; the combined work is distributed under the GPL-3.0.
 
 ## xterm.js
 
-Files: `src/StatusBar.Builder/Assets/xterm/xterm.js`, `xterm.css`, `addon-fit.js`
-(minified builds of [xterm.js](https://github.com/xtermjs/xterm.js) and
-`@xterm/addon-fit`, used for the live terminal preview).
+Files: `src/StatusBar.Web/wwwroot/xterm/xterm.js`, `xterm.css`, `addon-fit.js`,
+`addon-webgl.js` (minified builds of [xterm.js](https://github.com/xtermjs/xterm.js)
+5.5.0 and its `@xterm/addon-fit` and `@xterm/addon-webgl` addons, used for the
+live terminal preview).
 
 License: MIT
 

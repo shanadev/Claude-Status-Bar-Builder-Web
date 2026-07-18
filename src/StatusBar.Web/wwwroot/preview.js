@@ -7,7 +7,7 @@
 // Foundation, version 3. It is distributed WITHOUT ANY WARRANTY; see the full
 // license text in the LICENSE file at the root of this repository.
 
-let term = null, fitAddon = null;
+let term = null, fitAddon = null, webglAddon = null;
 let colsMode = 'fit'; // 'fit' tracks the panel width; a number pins the column count
 let resizeRef = null, resizeTimer = null;
 const ESC = String.fromCharCode(27);
@@ -24,8 +24,10 @@ function ensureTerm(font, bg) {
         lineHeight: 1.15,
         theme: { background: bg },
         allowTransparency: false,
-        // Emoji wider than their measured cell (🧠 etc.) otherwise get painted over
-        // by the next cell's background — rescale them to fit instead of clipping.
+        // Glyphs wider than their cell (emoji, big NF icons) otherwise get painted
+        // over by the next cell's background — rescale them to fit instead of
+        // clipping. Only the WebGL renderer honors these; the DOM renderer ignores
+        // them and half-hides the glyph, hence the addon load below.
         rescaleOverlappingGlyphs: true,
         customGlyphs: true,
         scrollback: 0
@@ -33,6 +35,16 @@ function ensureTerm(font, bg) {
     fitAddon = new FitAddon.FitAddon();
     term.loadAddon(fitAddon);
     term.open(document.getElementById('term'));
+    try {
+        webglAddon = new WebglAddon.WebglAddon();
+        webglAddon.onContextLoss(function () {
+            webglAddon.dispose(); // falls back to the DOM renderer
+            webglAddon = null;
+        });
+        term.loadAddon(webglAddon);
+    } catch (e) {
+        webglAddon = null; // no WebGL2 — DOM renderer still works, icons just clip
+    }
     window.addEventListener('resize', function () {
         if (colsMode !== 'fit' || !resizeRef) return;
         clearTimeout(resizeTimer);
@@ -67,7 +79,12 @@ window.renderStatus = async function (text, font, bg) {
     term.reset();
     // ?25l hides the cursor; ?7l disables autowrap — a too-wide line clips at the right
     // edge exactly like a real terminal status line instead of wrapping out of view.
-    term.write(ESC + '[?25l' + ESC + '[?7l' + lines.join('\r\n'));
+    // The write MUST be awaited: reset() is synchronous but write() is buffered, so an
+    // unawaited write lets the next render's reset run first and both payloads land on
+    // the same row (the status line shows doubled).
+    await new Promise(function (resolve) {
+        term.write(ESC + '[?25l' + ESC + '[?7l' + lines.join('\r\n'), resolve);
+    });
     return term.cols;
 };
 

@@ -6,6 +6,10 @@
 @implements IDisposable
 
 <div class="panel canvas" tabindex="0" @onkeydown="OnKey" @onkeydown:stopPropagation="false">
+    <div class="panel-head">
+        <span class="panel-title">Row Editor</span>
+        <span class="p-elem">click to style &#183; drag to arrange</span>
+    </div>
     @{ var ctx = State.BuildContext(160); }
     @foreach (var (row, rowIdx) in State.Theme.Rows.Select((r, i) => (r, i)))
     {

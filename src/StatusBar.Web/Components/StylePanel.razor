@@ -89,13 +89,24 @@
                 <span class="iconname">@(seg.Icon is null ? "element default" : seg.Icon.Length == 0 ? "hidden" : "custom")</span>
                 <button type="button" class="browse" @onclick="OnBrowseIcon">Browse</button>
             </div>
-            <div class="selrow" style="margin-top:8px; margin-bottom:0;">
+            <div class="selrow" style="margin-top:8px; @(seg.Icon == "" ? "margin-bottom:0;" : null)">
                 <span class="k">show icon</span>
                 <button type="button" class="toggle @(seg.Icon != "" ? "on" : null)"
                         @onclick="() => ToggleIconVisible(seg)">
                     <span class="tk"></span>@(seg.Icon != "" ? "shown" : "hidden")
                 </button>
             </div>
+            @if (seg.Icon != "" && EffectiveIcon(seg, def).Length > 0)
+            {
+                <div class="selrow" style="margin-bottom:0;">
+                    <span class="k">space after</span>
+                    <button type="button" class="toggle @(seg.IconSpace ? "on" : null)"
+                            title="wide icons overhang their cell — an extra space keeps the text clear"
+                            @onclick="() => { seg.IconSpace = !seg.IconSpace; State.Notify(); }">
+                        <span class="tk"></span>@(seg.IconSpace ? "extra space" : "off")
+                    </button>
+                </div>
+            }
         </div>
 
         <div class="sect">

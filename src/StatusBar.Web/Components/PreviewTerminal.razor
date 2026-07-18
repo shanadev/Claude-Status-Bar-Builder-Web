@@ -6,8 +6,12 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
+<div class="prevhead">
+    <span class="prevtitle">live preview&nbsp;<span class="caret"></span></span>
+    <span class="prevsub">what actually ships to your terminal</span>
+</div>
 <div class="monitor @(_crt ? null : "bare")">
-    <div class="screen">
+    <div class="screen" style="background:@ScreenBg">
         @if (_crt)
         {
             <div class="rollband"></div>
@@ -42,17 +46,29 @@
                             @onclick="() => SetColsAsync(localPreset)">@localPreset</button>
                 }
             </span>
+            <button type="button" class="feedbtn @(_feedOpen ? "on" : null)"
+                    @onclick="() => _feedOpen = !_feedOpen"
+                    aria-expanded="@(_feedOpen ? "true" : "false")"
+                    title="every sample-data field driving the preview">
+                sample data <i class="fc">&#9662;</i>
+            </button>
         </div>
     </div>
+    <SampleDataFeed Open="_feedOpen" />
 </div>
 
 @code {
     // Survives navigating away to export and back — session-scoped, per the card.
     static string _colsMode = "fit";
     static int _cols = 160;
+    static bool _feedOpen;
 
     bool _crt = true;
     bool _rendering, _dirty;
+
+    // The inset around the status line reads as part of the CRT screen, not a black
+    // frame — so it always wears the theme's terminal background.
+    string ScreenBg => Ansi.ToHex(State.Theme.Background) ?? "#101014";
     DotNetObjectReference<PreviewTerminal>? _selfRef;
 
     protected override void OnInitialized() => State.Changed += OnStateChanged;

@@ -1,0 +1,143 @@
+@* Hack the Claude Status Bar — sample data feed: every fake-session value driving the preview,
+   in a drawer that slides down from the monitor. Nothing here ships with the theme — it only
+   feeds the live render. (Terminal columns live on the monitor bar, not here: the preview
+   always composes at the terminal's real width.)
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@implements IDisposable
+
+<div class="feed @(Open ? "open" : null)" inert="@(!Open)">
+    <div class="feedclip">
+        <div class="feedbody">
+
+            <div class="fgroup">
+                <div class="fg-lab">session</div>
+                <div class="frow"><span class="k">model</span>
+                    <input type="text" @bind="S.ModelName" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">model id</span>
+                    <input type="text" @bind="S.ModelId" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">effort</span>
+                    <select @bind="S.EffortLevel" @bind:after="State.Notify">
+                        <option value="">none</option>
+                        <option>low</option>
+                        <option>medium</option>
+                        <option>high</option>
+                        <option>xhigh</option>
+                        <option>max</option>
+                    </select></div>
+                <div class="frow"><span class="k">thinking</span>
+                    <button type="button" class="toggle @(S.ThinkingEnabled ? "on" : null)"
+                            @onclick="() => { S.ThinkingEnabled = !S.ThinkingEnabled; State.Notify(); }">
+                        <span class="tk"></span></button></div>
+                <div class="frow"><span class="k">style</span>
+                    <input type="text" @bind="S.OutputStyle" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">agent</span>
+                    <input type="text" @bind="S.AgentName" @bind:event="oninput" @bind:after="State.Notify" placeholder="none" /></div>
+                <div class="frow"><span class="k">session</span>
+                    <input type="text" @bind="S.SessionName" @bind:event="oninput" @bind:after="State.Notify" placeholder="none" /></div>
+                <div class="frow"><span class="k">vim</span>
+                    <select @bind="S.VimMode" @bind:after="State.Notify">
+                        <option value="">off</option>
+                        <option>NORMAL</option>
+                        <option>INSERT</option>
+                        <option>VISUAL</option>
+                    </select></div>
+                <div class="frow"><span class="k">cc version</span>
+                    <input type="text" @bind="S.CcVersion" @bind:event="oninput" @bind:after="State.Notify" /></div>
+            </div>
+
+            <div class="fgroup">
+                <div class="fg-lab">workspace</div>
+                <div class="frow"><span class="k">directory</span>
+                    <input type="text" @bind="S.Cwd" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">owner/repo</span>
+                    <input type="text" @bind="S.RepoOwner" @bind:event="oninput" @bind:after="State.Notify" title="repo owner" />
+                    <input type="text" @bind="S.RepoName" @bind:event="oninput" @bind:after="State.Notify" title="repo name" /></div>
+                <div class="frow"><span class="k">worktree</span>
+                    <input type="text" @bind="S.WorktreeName" @bind:event="oninput" @bind:after="State.Notify" placeholder="none" /></div>
+                <div class="frow"><span class="k">proj ver</span>
+                    <input type="text" @bind="S.ProjectVersion" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">pull req</span>
+                    <button type="button" class="toggle @(S.HasPr ? "on" : null)"
+                            @onclick="() => { S.HasPr = !S.HasPr; State.Notify(); }">
+                        <span class="tk"></span></button></div>
+                <div class="frow"><span class="k">pr # / state</span>
+                    <input type="number" min="1" @bind="S.PrNumber" @bind:after="State.Notify" title="PR number" />
+                    <input type="text" @bind="S.PrState" @bind:event="oninput" @bind:after="State.Notify" title="review state" /></div>
+            </div>
+
+            <div class="fgroup">
+                <div class="fg-lab">git</div>
+                <div class="frow"><span class="k">branch</span>
+                    <input type="text" @bind="S.GitBranch" @bind:event="oninput" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">stg/mod/unt</span>
+                    <input type="number" min="0" @bind="S.GitStaged" @bind:after="State.Notify" title="staged" />
+                    <input type="number" min="0" @bind="S.GitModified" @bind:after="State.Notify" title="modified" />
+                    <input type="number" min="0" @bind="S.GitUntracked" @bind:after="State.Notify" title="untracked" /></div>
+                <div class="frow"><span class="k">ahead/behind</span>
+                    <input type="number" min="0" @bind="S.GitAhead" @bind:after="State.Notify" title="ahead" />
+                    <input type="number" min="0" @bind="S.GitBehind" @bind:after="State.Notify" title="behind" /></div>
+                <div class="frow"><span class="k">lines +/&#8722;</span>
+                    <input type="number" min="0" @bind="S.GitLinesAdded" @bind:after="State.Notify" title="lines added" />
+                    <input type="number" min="0" @bind="S.GitLinesRemoved" @bind:after="State.Notify" title="lines removed" /></div>
+            </div>
+
+            <div class="fgroup">
+                <div class="fg-lab">context</div>
+                <div class="frow"><span class="k">used %</span>
+                    <input type="range" min="0" max="100" step="1" @bind="S.ContextPercent" @bind:event="oninput" @bind:after="State.Notify" />
+                    <span class="v">@S.ContextPercent.ToString("0")</span></div>
+                <div class="frow"><span class="k">window k</span>
+                    <input type="number" min="1" @bind="S.ContextSizeK" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">tokens k</span>
+                    <input type="number" min="0" step="0.1" @bind="S.TokensInK" @bind:after="State.Notify" title="input k" />
+                    <input type="number" min="0" step="0.1" @bind="S.TokensOutK" @bind:after="State.Notify" title="output k" />
+                    <input type="number" min="0" step="0.1" @bind="S.TokensCachedK" @bind:after="State.Notify" title="cached k" /></div>
+            </div>
+
+            <div class="fgroup">
+                <div class="fg-lab">burn</div>
+                <div class="frow"><span class="k">cost $</span>
+                    <input type="number" min="0" step="0.05" @bind="S.CostUsd" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">session min</span>
+                    <input type="number" min="0" @bind="S.DurationMin" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">api min</span>
+                    <input type="number" min="0" @bind="S.ApiMin" @bind:after="State.Notify" /></div>
+                <div class="frow"><span class="k">lines +/&#8722;</span>
+                    <input type="number" min="0" @bind="S.LinesAdded" @bind:after="State.Notify" title="lines added" />
+                    <input type="number" min="0" @bind="S.LinesRemoved" @bind:after="State.Notify" title="lines removed" /></div>
+            </div>
+
+            <div class="fgroup">
+                <div class="fg-lab">limits</div>
+                <div class="frow"><span class="k">tracked</span>
+                    <button type="button" class="toggle @(S.HasLimits ? "on" : null)"
+                            @onclick="() => { S.HasLimits = !S.HasLimits; State.Notify(); }">
+                        <span class="tk"></span></button></div>
+                <div class="frow"><span class="k">5h %</span>
+                    <input type="range" min="0" max="100" step="1" @bind="S.Limit5h" @bind:event="oninput" @bind:after="State.Notify" />
+                    <span class="v">@S.Limit5h.ToString("0")</span></div>
+                <div class="frow"><span class="k">week %</span>
+                    <input type="range" min="0" max="100" step="1" @bind="S.Limit7d" @bind:event="oninput" @bind:after="State.Notify" />
+                    <span class="v">@S.Limit7d.ToString("0")</span></div>
+                <div class="frow"><span class="k">reset in h</span>
+                    <input type="number" min="0" step="0.5" @bind="S.Limit5hResetHours" @bind:after="State.Notify" title="5h window" />
+                    <input type="number" min="0" step="0.5" @bind="S.Limit7dResetHours" @bind:after="State.Notify" title="weekly window" /></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+
+    SampleData S => State.Sample;
+
+    // Self-subscribe: the monitor-bar knobs edit the same fields — parent re-render alone
+    // won't refresh the values shown here.
+    protected override void OnInitialized() => State.Changed += StateHasChanged;
+
+    public void Dispose() => State.Changed -= StateHasChanged;
+}

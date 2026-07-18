@@ -211,6 +211,7 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 
 /* ── Segment canvas ─────────────────────────────────────────────────────── */
 .canvas { padding:16px 18px; }
+.canvas .panel-head { margin:-16px -18px 14px; }
 .rowlab { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
   margin:10px 0 8px 2px; display:flex; gap:10px; align-items:center; }
 .rowlab:first-child { margin-top:0; }
@@ -341,10 +342,19 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .addlink:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
 
 /* ── Preview terminal (the hero surface) ────────────────────────────────── */
-.monitor { background:linear-gradient(180deg, #131a24, #0b1119); border:1px solid var(--gib-line);
-  border-radius:8px; padding:14px 14px 10px; box-shadow:0 12px 40px rgba(0,0,0,.6); }
-.monitor.bare { background:transparent; border-color:var(--gib-line); box-shadow:none;
-  border-radius:3px; padding:0 0 6px; }
+/* The header + green edge glow exist to pull the eye here: the canvas chips wear the
+   theme's colors too, so the actual output needs to outshine them. */
+.prevhead { display:flex; align-items:baseline; gap:12px; margin:16px 2px 8px; }
+.prevtitle { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.26em;
+  color:var(--gib-green); text-shadow:0 0 12px rgba(0,255,102,.6); }
+.prevtitle .caret { width:.5em; height:.9em; background:var(--gib-green);
+  box-shadow:0 0 6px rgba(0,255,102,.7); }
+.prevsub { font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--gib-faint); }
+
+.monitor { background:linear-gradient(180deg, #131a24, #0b1119); border:1px solid rgba(0,255,102,.32);
+  border-radius:8px; padding:14px 14px 10px;
+  box-shadow:0 0 22px rgba(0,255,102,.12), 0 12px 40px rgba(0,0,0,.6); }
+.monitor.bare { background:transparent; box-shadow:none; border-radius:3px; }
 .screen { position:relative; background:#000; border-radius:4px; overflow:hidden;
   border:1px solid #0a141d; padding:12px 12px 14px; }
 .monitor.bare .screen { border-radius:2px; }
@@ -360,7 +370,6 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 
 .monbar { display:flex; justify-content:space-between; align-items:center; gap:16px;
   padding:9px 4px 2px; flex-wrap:wrap; }
-.monitor.bare .monbar { padding:9px 2px 2px; }
 .monmeta { font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--gib-faint); }
 .monmeta b { color:var(--gib-dim); font-weight:400; }
 .knobs { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
@@ -372,6 +381,39 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
   background:transparent; border:none; cursor:pointer; font-family:var(--mono); }
 .colbtns button + button { border-left:1px solid var(--gib-line); }
 .colbtns button.on { color:var(--gib-cyan); background:rgba(0,229,255,.1); }
+
+/* ── Sample data feed (drawer sliding down from the monitor) ────────────── */
+.feedbtn { display:inline-flex; align-items:center; gap:6px; font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--gib-dim); background:transparent;
+  border:1px solid var(--gib-line); border-radius:2px; padding:4px 10px; cursor:pointer;
+  font-family:var(--mono); }
+.feedbtn:hover { color:var(--gib-bright); border-color:var(--gib-cyan);
+  box-shadow:0 0 8px rgba(0,229,255,.3); }
+.feedbtn.on { color:var(--gib-cyan); border-color:var(--gib-cyan); background:rgba(0,229,255,.1); }
+.feedbtn .fc { font-style:normal; display:inline-block; transition:transform .2s; }
+.feedbtn.on .fc { transform:rotate(180deg); }
+
+.feed { display:grid; grid-template-rows:0fr; transition:grid-template-rows .3s ease; }
+.feed.open { grid-template-rows:1fr; }
+.feedclip { overflow:hidden; min-height:0; }
+.feedbody { margin-top:10px; padding:12px 2px 4px; border-top:1px dashed var(--gib-line);
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(225px, 1fr)); gap:12px 20px;
+  align-items:start; }
+.fg-lab { font-size:10px; text-transform:uppercase; letter-spacing:.22em; color:var(--gib-magenta);
+  margin-bottom:7px; }
+.frow { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+.frow .k { font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-faint);
+  width:78px; flex:none; }
+.frow input[type="text"], .frow input[type="number"], .frow select { flex:1; width:0; min-width:0;
+  font-size:11px; color:var(--gib-text); background:var(--gib-surface);
+  border:1px solid var(--gib-line); border-radius:2px; padding:4px 7px; font-family:var(--mono); }
+.frow input[type="number"] { appearance:textfield; -moz-appearance:textfield; }
+.frow input[type="number"]::-webkit-inner-spin-button,
+.frow input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+.frow input:hover, .frow input:focus, .frow select:hover, .frow select:focus {
+  border-color:var(--gib-cyan); }
+.frow input[type="range"] { flex:1; min-width:0; accent-color:var(--gib-cyan); height:14px; }
+.frow .v { font-size:10px; color:var(--gib-dim); width:24px; text-align:right; flex:none; }
 
 /* ── Icon browser modal ─────────────────────────────────────────────────── */
 .backdrop { position:fixed; inset:0; background:rgba(4,6,10,.75); z-index:60;

@@ -60,6 +60,11 @@ public partial class Segment : ObservableObject
     [ObservableProperty] private ElementKind _element;
     [ObservableProperty] private string? _label;   // null = element default, "" = hidden
     [ObservableProperty] private string? _icon;    // null = element default, "" = hidden
+    // Extra space after the icon: wide glyphs overhang their cell, so the built-in
+    // single space can be swallowed visually. Default-off keeps theme JSON/URLs lean.
+    [ObservableProperty]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    private bool _iconSpace;
     [ObservableProperty] private string? _text;    // Text element content; Spacer width ("flex" or a number)
     [ObservableProperty] private string? _fg;
     [ObservableProperty] private string? _bg;
