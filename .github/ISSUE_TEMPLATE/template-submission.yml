@@ -1,0 +1,39 @@
+# Hack the Claude Status Bar — template submission form. The site's "submit as template"
+# buttons prefill this via query params (field ids must match TemplateSubmit.IssueUrl).
+# Approval flow: a maintainer decodes the share link and adds the entry to
+# src/StatusBar.Web/wwwroot/templates.json — merging that commit ships it to the gallery.
+name: Template submission
+description: Submit your status bar as a template for the gallery
+title: "[template] my status bar"
+labels: [template-submission]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for jacking in. If approved, your bar ships in the gallery with the name,
+        author credit, and submission date. By submitting you agree your theme JSON is
+        published under this repo's GPL-3.0 license.
+  - type: input
+    id: bar-name
+    attributes:
+      label: Status bar name
+      description: Shown on the gallery card.
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: Author credit
+      description: The name or handle to show on the card. Defaults to your GitHub username if empty.
+  - type: textarea
+    id: share-link
+    attributes:
+      label: Share link
+      description: The full link from the Jack Out page — your whole status bar travels inside it.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything the maintainer should know (optional).

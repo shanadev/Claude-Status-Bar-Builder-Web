@@ -240,21 +240,20 @@
         </div>
     }
 }
-else
+else if (State.SelectedRow is Row selRow)
 {
-    var targetRow = State.TargetRow;
-    int rowNum = State.Theme.Rows.IndexOf(targetRow) + 1;
+    int rowNum = State.Theme.Rows.IndexOf(selRow) + 1;
     <div class="panel-head">
-        <span class="panel-title">Theme</span>
-        <span class="p-elem">no segment selected</span>
+        <span class="panel-title">Row @rowNum</span>
+        <span class="p-elem">separators &amp; end caps</span>
     </div>
 
     <div class="sect">
-        <div class="s-lab"><span>row @rowNum — separators</span></div>
+        <div class="s-lab"><span>separators</span></div>
         <div class="selrow">
             <span class="k">style</span>
-            <select value="@targetRow.Separator"
-                    @onchange="e => { targetRow.Separator = Enum.Parse<SeparatorStyle>(e.Value!.ToString()!); State.Notify(); }">
+            <select value="@selRow.Separator"
+                    @onchange="e => { selRow.Separator = Enum.Parse<SeparatorStyle>(e.Value!.ToString()!); State.Notify(); }">
                 @foreach (var s in Enum.GetValues<SeparatorStyle>())
                 {
                     <option value="@s">@SepName(s)</option>
@@ -263,34 +262,54 @@ else
         </div>
         <div class="selrow">
             <span class="k">end caps</span>
-            <select value="@targetRow.Caps"
-                    @onchange="e => { targetRow.Caps = Enum.Parse<CapStyle>(e.Value!.ToString()!); State.Notify(); }">
+            <select value="@selRow.Caps"
+                    @onchange="e => { selRow.Caps = Enum.Parse<CapStyle>(e.Value!.ToString()!); State.Notify(); }">
                 @foreach (var c in Enum.GetValues<CapStyle>())
                 {
                     <option value="@c">@c.ToString().ToLowerInvariant()</option>
                 }
             </select>
         </div>
-        @if (targetRow.Separator is SeparatorStyle.Pipe or SeparatorStyle.Dot or SeparatorStyle.ChevronLine)
+        @if (selRow.Separator is SeparatorStyle.Pipe or SeparatorStyle.Dot or SeparatorStyle.ChevronLine)
         {
-            <ColorField Label="sep" Value="@targetRow.SeparatorFg" ValueChanged="v => { targetRow.SeparatorFg = v; State.Notify(); }" />
+            <ColorField Label="sep" Value="@selRow.SeparatorFg" ValueChanged="v => { selRow.SeparatorFg = v; State.Notify(); }" />
         }
     </div>
 
     <div class="sect">
-        <div class="s-lab"><span>theme</span></div>
+        <p class="t-small">palette clicks and drops add elements to this row &#183; a row with no
+        elements renders as a blank line</p>
+        <button type="button" class="addlink" style="margin-top:8px;"
+                @onclick="() => State.ClearSelection()">&#8592; status bar settings</button>
+    </div>
+}
+else
+{
+    <div class="panel-head">
+        <span class="panel-title">Status Bar</span>
+        <span class="p-elem">nothing selected</span>
+    </div>
+
+    <div class="sect">
+        <div class="s-lab"><span>status bar name</span></div>
         <div class="selrow">
             <span class="k">name</span>
             <input type="text" value="@State.Theme.Name" spellcheck="false"
                    @onchange="SetThemeName" />
         </div>
+        <p class="t-small" style="margin-top:8px;">names the whole bar &#8212; it travels inside the
+        share link and theme.json, and is how your bar shows up if you submit it as a template</p>
+    </div>
+
+    <div class="sect">
+        <div class="s-lab"><span>terminal</span></div>
         <ColorField Label="term bg" Value="@State.Theme.Background" AllowNone="false"
                     ValueChanged="SetThemeBackground" />
     </div>
 
     <div class="sect">
-        <p class="t-small">select a segment on the canvas to style it &#8212; colors, icon, label,
-        format, bars and thresholds all live-update the terminal below</p>
+        <p class="t-small">click a segment chip to style it &#8212; colors, icon, label, format,
+        bars, thresholds &#183; click a row label to set its separators &amp; caps</p>
     </div>
 }
 </div>

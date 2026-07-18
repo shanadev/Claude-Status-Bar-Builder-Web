@@ -218,9 +218,13 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .rowlab button { font:inherit; letter-spacing:inherit; text-transform:inherit; color:var(--gib-faint);
   border:1px dashed var(--gib-line); background:transparent; border-radius:2px; padding:2px 8px; cursor:pointer; }
 .rowlab button:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
-.rowlab .rowsel { margin-left:auto; display:flex; gap:8px; }
+.rowlab.on .rowbtn { color:var(--gib-cyan); border-style:solid; border-color:var(--gib-cyan);
+  box-shadow:0 0 10px rgba(0,229,255,.35); text-shadow:0 0 6px rgba(0,229,255,.5); }
+.rowlab .rowhint { color:var(--gib-dim); letter-spacing:.14em; }
 
 .segrow { display:flex; align-items:stretch; flex-wrap:wrap; row-gap:14px; min-height:38px; }
+.segrow.rowselected { outline:2px solid var(--gib-cyan); outline-offset:6px; border-radius:2px;
+  box-shadow:0 0 18px rgba(0,229,255,.22); }
 .seg { position:relative; display:flex; align-items:center; gap:7px; font-size:13px;
   padding:8px 10px 8px 20px; color:#04060a; font-weight:600; cursor:pointer; margin-right:14px;
   border:none; font-family:var(--mono); }
@@ -499,6 +503,26 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .codeblock .copy2:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
 .hint { font-size:11px; color:var(--gib-faint); margin-top:10px; }
 .hint b { color:var(--gib-dim); font-weight:400; }
+.tplhint { font-size:11px; color:var(--gib-faint); margin-top:16px; }
+
+/* ── Templates gallery ──────────────────────────────────────────────────── */
+.gallery { max-width:1100px; margin:0 auto; padding:34px 22px 60px; }
+.gallery h1 { font-size:26px; text-transform:uppercase; letter-spacing:.06em; color:var(--gib-bright);
+  margin-bottom:6px; }
+.gallery .sub { color:var(--gib-dim); font-size:13px; margin-bottom:22px; }
+.tplgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px; }
+.tplcard { background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px;
+  display:flex; flex-direction:column; overflow:hidden; }
+.tplcard:hover { border-color:var(--gib-cyan); box-shadow:0 0 14px rgba(0,229,255,.15); }
+.tplterm { padding:14px 12px; overflow:hidden; border-bottom:1px solid var(--gib-line); }
+.ansiline { font-family:var(--mono); font-size:11px; line-height:1.6; white-space:pre; }
+.tplmeta { padding:10px 12px 0; display:flex; flex-direction:column; gap:3px; }
+.tplmeta b { color:var(--gib-bright); font-size:13px; font-weight:600; }
+.tplbtns { display:flex; gap:8px; padding:12px; margin-top:auto; }
+.tplbtns .btn { font-size:10px; padding:7px 12px; }
+.tplcard.tplsubmit { align-items:flex-start; justify-content:center; gap:12px; padding:18px;
+  border-style:dashed; }
+.tplcard.tplsubmit:hover { border-color:var(--gib-claude); box-shadow:0 0 14px rgba(255,138,92,.15); }
 .dlrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
 
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80;
@@ -512,6 +536,9 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .remixchip { display:inline-flex; align-items:center; gap:8px; font-size:10px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--gib-violet); border:1px solid var(--gib-violet);
   border-radius:12px; padding:4px 12px; }
+.remixchip button { color:var(--gib-violet); background:transparent; border:none; cursor:pointer;
+  font-family:var(--mono); font-size:12px; padding:0 0 0 2px; line-height:1; }
+.remixchip button:hover { color:var(--gib-bright); }
 
 /* ── Boot sequence (overlay in index.html, runs while WASM loads) ───────── */
 #boot { position:fixed; inset:0; z-index:100; background:#000; display:flex;

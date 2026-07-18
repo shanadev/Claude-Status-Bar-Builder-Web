@@ -8,25 +8,31 @@
 <div class="panel canvas" tabindex="0" @onkeydown="OnKey" @onkeydown:stopPropagation="false">
     <div class="panel-head">
         <span class="panel-title">Row Editor</span>
-        <span class="p-elem">click to style &#183; drag to arrange</span>
+        <span class="p-elem">click a chip or row &#183; drag to arrange</span>
     </div>
     @{ var ctx = State.BuildContext(160); }
     @foreach (var (row, rowIdx) in State.Theme.Rows.Select((r, i) => (r, i)))
     {
         var localRow = row;
-        <div class="rowlab">
-            <span>row @(rowIdx + 1)</span>
-            <button type="button" title="palette clicks add to this row"
+        bool rowSelected = State.SelectedRow == localRow && State.Selected is null;
+        <div class="rowlab @(rowSelected ? "on" : null)">
+            <button type="button" class="rowbtn"
+                    title="style this row — separators & end caps; palette clicks add elements here"
                     @onclick="() => State.SelectRow(localRow)">
-                @(State.TargetRow == localRow ? "● target" : "+ element")
+                row @(rowIdx + 1)@(rowSelected ? " ● selected" : "")
             </button>
+            @if (rowSelected)
+            {
+                <span class="rowhint">palette adds here</span>
+            }
             @if (State.Theme.Rows.Count > 1)
             {
                 <button type="button" title="remove this row (segments included)"
                         @onclick="() => State.RemoveRow(localRow)">&#215; row</button>
             }
         </div>
-        <div class="segrow"
+        <div class="segrow @(rowSelected ? "rowselected" : null)"
+             @onclick="() => State.SelectRow(localRow)"
              @ondragover="e => { }" @ondragover:preventDefault>
             @foreach (var (seg, segIdx) in row.Segments.Select((s, i) => (s, i)))
             {
@@ -42,6 +48,7 @@
                             class="segspacer @(State.Selected == localSeg ? "selected" : null)"
                             draggable="true"
                             @onclick="() => State.Select(localRow, localSeg)"
+                            @onclick:stopPropagation
                             @ondragstart="() => StartDrag(localRow, localSeg)"
                             @ondragend="EndDrag"
                             @ondragenter="() => SetHover(localRow, localIdx)"
@@ -64,6 +71,7 @@
                             style="background:@bg; color:@fg; @(rendered is null ? "opacity:.45;" : null)"
                             draggable="true"
                             @onclick="() => State.Select(localRow, localSeg)"
+                            @onclick:stopPropagation
                             @ondragstart="() => StartDrag(localRow, localSeg)"
                             @ondragend="EndDrag"
                             @ondragenter="() => SetHover(localRow, localIdx)"
@@ -123,6 +131,11 @@
 
     void OnKey(KeyboardEventArgs e)
     {
+        if (e.Key == "Escape")
+        {
+            State.ClearSelection(); // segment → row → nothing
+            return;
+        }
         var row = State.SelectedRow;
         var seg = State.Selected;
         if (row is null || seg is null)
@@ -132,9 +145,6 @@
         int idx = row.Segments.IndexOf(seg);
         switch (e.Key)
         {
-            case "Escape":
-                State.ClearSelection();
-                break;
             case "Delete":
             case "Backspace":
                 State.RemoveSegment(row, seg);

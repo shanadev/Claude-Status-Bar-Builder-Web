@@ -84,7 +84,16 @@ public sealed class BuilderState : IDisposable
 
     public void Select(Row row, Segment seg) { SelectedRow = row; Selected = seg; Changed?.Invoke(); }
     public void SelectRow(Row row) { SelectedRow = row; Selected = null; Changed?.Invoke(); }
-    public void ClearSelection() { Selected = null; Changed?.Invoke(); }
+
+    /// <summary>Steps selection down: segment → its row → nothing (Escape presses walk out).</summary>
+    public void ClearSelection()
+    {
+        if (Selected is not null) Selected = null;
+        else SelectedRow = null;
+        Changed?.Invoke();
+    }
+
+    public void DismissRemix() { RemixedFromLink = false; Changed?.Invoke(); }
 
     public void ReplaceTheme(Theme theme, bool remixed = false)
     {

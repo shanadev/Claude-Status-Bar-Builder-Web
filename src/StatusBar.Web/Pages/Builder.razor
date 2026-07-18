@@ -16,7 +16,9 @@
     <main class="ws-main">
         @if (State.RemixedFromLink)
         {
-            <span class="remixchip">&#9670; remixed from a shared theme</span>
+            <span class="remixchip">&#9670; loaded from a shared link &#8212; this copy is yours to edit
+                <button type="button" title="dismiss" @onclick="() => State.DismissRemix()">&#215;</button>
+            </span>
         }
         <SegmentCanvas />
         <PreviewTerminal />

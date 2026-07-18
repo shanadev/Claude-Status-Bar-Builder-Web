@@ -1,0 +1,387 @@
+{
+  "templates": [
+    {
+      "name": "Tokyo Nightline",
+      "author": "shanadev",
+      "date": "2026-07-18",
+      "theme": {
+        "rows": [
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "model",
+                "label": "",
+                "icon": "\u2733",
+                "fg": "#16161e",
+                "bg": "#7aa2f7",
+                "bold": true,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "contextTokens",
+                "label": "Ctx:",
+                "icon": "",
+                "fg": "#c0caf5",
+                "bg": "#3b4261",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [
+                  {
+                    "atOrAbove": 70,
+                    "fg": "#e0af68"
+                  },
+                  {
+                    "atOrAbove": 90,
+                    "fg": "#f7768e"
+                  }
+                ],
+                "element": "contextPercent",
+                "label": "",
+                "icon": "",
+                "fg": "#a9b1d6",
+                "bg": "#24283b",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true,
+                "bar": {
+                  "width": 10,
+                  "filledChar": "\u2588",
+                  "emptyChar": "\u2591",
+                  "smooth": true,
+                  "emptyFg": "#3b4261",
+                  "gradientFrom": "#9ece6a",
+                  "gradientTo": "#f7768e"
+                }
+              },
+              {
+                "thresholds": [],
+                "element": "gitBranch",
+                "label": "",
+                "icon": "\uD83C\uDF3F",
+                "fg": "#16161e",
+                "bg": "#9ece6a",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "gitDiff",
+                "label": "",
+                "icon": "",
+                "fg": "#c0caf5",
+                "bg": "#414868",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "cost",
+                "label": "",
+                "icon": "\uD83D\uDCB0",
+                "fg": "#16161e",
+                "bg": "#bb9af7",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit5h",
+                "label": "5h",
+                "icon": "",
+                "fg": "#16161e",
+                "bg": "#7dcfff",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "option": "time",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit7d",
+                "label": "wk",
+                "icon": "",
+                "fg": "#c0caf5",
+                "bg": "#565f89",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "option": "time",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "clock",
+                "label": "",
+                "icon": "",
+                "fg": "#a9b1d6",
+                "bg": "#24283b",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              }
+            ],
+            "separator": "chevron",
+            "caps": "round"
+          }
+        ],
+        "name": "Tokyo Nightline",
+        "fontFamily": "CaskaydiaCove NFM",
+        "background": "#101014"
+      }
+    },
+    {
+      "name": "Crash Override",
+      "author": "shanadev",
+      "date": "2026-07-18",
+      "theme": {
+        "rows": [
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "model",
+                "label": "",
+                "icon": "\u2733",
+                "fg": "#04120a",
+                "bg": "#00ff66",
+                "bold": true,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "directory",
+                "fg": "#7dffab",
+                "bg": "#0a2a14",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "gitBranch",
+                "fg": "#00ff66",
+                "bg": "#003b17",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "gitDiff",
+                "fg": "#a0ffc8",
+                "bg": "#071c0e",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [
+                  {
+                    "atOrAbove": 80,
+                    "fg": "#ffb300"
+                  },
+                  {
+                    "atOrAbove": 95,
+                    "fg": "#ff3b4d"
+                  }
+                ],
+                "element": "contextPercent",
+                "fg": "#d2ffe4",
+                "bg": "#0f3320",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true,
+                "bar": {
+                  "width": 12,
+                  "filledChar": "\u2588",
+                  "emptyChar": "\u2591",
+                  "smooth": true,
+                  "emptyFg": "#123a22",
+                  "gradientFrom": "#00ff66",
+                  "gradientTo": "#ffb300"
+                }
+              }
+            ],
+            "separator": "slant",
+            "caps": "slant"
+          },
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "tokensTotal",
+                "label": "tok",
+                "fg": "#7dffab",
+                "bg": "#0a2a14",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "linesChanged",
+                "fg": "#a0ffc8",
+                "bg": "#071c0e",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "cost",
+                "fg": "#d2ffe4",
+                "bg": "#0f3320",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "clock",
+                "fg": "#00ff66",
+                "bg": "#003b17",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              }
+            ],
+            "separator": "chevron",
+            "caps": "chevron"
+          }
+        ],
+        "name": "Crash Override",
+        "fontFamily": "CaskaydiaCove NFM",
+        "background": "#020a04"
+      }
+    },
+    {
+      "name": "Acid Burn",
+      "author": "shanadev",
+      "date": "2026-07-18",
+      "theme": {
+        "rows": [
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "model",
+                "fg": "#ff2ea6",
+                "bold": true,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "repoName",
+                "fg": "#00e5ff",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "gitBranch",
+                "fg": "#8b5cff",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "spacer",
+                "text": "flex",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [
+                  {
+                    "atOrAbove": 90,
+                    "fg": "#ff3b4d"
+                  }
+                ],
+                "element": "contextPercent",
+                "fg": "#ffb300",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "clock",
+                "fg": "#b58aff",
+                "bold": false,
+                "dim": true,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              }
+            ],
+            "separator": "pipe",
+            "caps": "none",
+            "separatorFg": "#3a2a4a"
+          }
+        ],
+        "name": "Acid Burn",
+        "fontFamily": "CaskaydiaCove NFM",
+        "background": "#0b0410"
+      }
+    }
+  ]
+}

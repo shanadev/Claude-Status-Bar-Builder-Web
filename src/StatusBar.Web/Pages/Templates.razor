@@ -1,0 +1,112 @@
+@* Hack the Claude Status Bar — templates gallery: approved status bars, live-rendered
+   from their theme JSON (no screenshots — the preview IS the bar).
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@page "/templates"
+@using System.Text.Json
+@inject HttpClient Http
+@inject BuilderState State
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ToastService Toasts
+
+<PageTitle>Templates — Hack the Claude Status Bar</PageTitle>
+
+<div class="gallery">
+    <h1>Templates</h1>
+    <p class="sub">Approved status bars from fellow console cowboys &#8212; rendered live from
+        their actual theme JSON. Jack one in and make it yours.
+        <a href="build">&#8592; back to the builder</a></p>
+
+    @if (_error)
+    {
+        <p class="t-small">couldn't load the gallery &#8212; the grid is down, try a reload.</p>
+    }
+    else if (_cards is null)
+    {
+        <p class="t-small">dialing the gallery&#8230;</p>
+    }
+    else
+    {
+        <div class="tplgrid">
+            @foreach (var card in _cards)
+            {
+                var localCard = card;
+                <div class="tplcard">
+                    <div class="tplterm" style="background:@localCard.Bg">@localCard.Preview</div>
+                    <div class="tplmeta">
+                        <b>@localCard.Name</b>
+                        <span class="t-micro">by @localCard.Author &#183; @localCard.Date</span>
+                    </div>
+                    <div class="tplbtns">
+                        <button type="button" class="btn go" @onclick="() => JackIn(localCard)">jack in</button>
+                        <button type="button" class="btn ghost" @onclick="() => CopyLink(localCard)">copy link</button>
+                    </div>
+                </div>
+            }
+            <div class="tplcard tplsubmit">
+                <p class="t-h2">built something worth sharing?</p>
+                <a class="btn brand" href="@TemplateSubmit.IssueUrl(State.Theme, Nav.BaseUri)"
+                   target="_blank" rel="noopener">submit your current bar</a>
+                <p class="t-small">opens a prefilled GitHub issue with your bar's share link &#8212;
+                    approved submissions land here with your name on them</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    sealed record TplCard(string Name, string Author, string Date, string Bg, MarkupString Preview, string ThemeJson);
+
+    List<TplCard>? _cards;
+    bool _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await State.InitializeAsync(Nav);
+        try
+        {
+            using var doc = JsonDocument.Parse(await Http.GetStringAsync("templates.json"));
+            var ctx = new SampleData().Build();
+            // Narrow enough that flex-spacer bars show both ends inside a gallery card.
+            ctx.Computed.Columns = 48;
+            var cards = new List<TplCard>();
+            foreach (var el in doc.RootElement.GetProperty("templates").EnumerateArray())
+            {
+                // Entries carry either raw theme JSON ("theme") or a share-link payload ("t") —
+                // whichever was easier at approval time.
+                Theme? theme = el.TryGetProperty("theme", out var raw)
+                    ? Theme.FromJson(raw.GetRawText())
+                    : el.TryGetProperty("t", out var enc) ? ThemeCodec.TryDecode(enc.GetString() ?? "") : null;
+                if (theme is null || theme.Rows.Count == 0) continue;
+
+                cards.Add(new TplCard(
+                    el.TryGetProperty("name", out var n) ? n.GetString() ?? theme.Name : theme.Name,
+                    el.TryGetProperty("author", out var a) ? a.GetString() ?? "anonymous" : "anonymous",
+                    el.TryGetProperty("date", out var d) ? d.GetString() ?? "" : "",
+                    Ansi.ToHex(theme.Background) ?? "#101014",
+                    new MarkupString(AnsiHtml.RowsToHtml(Composer.Compose(theme, ctx))),
+                    theme.ToJson()));
+            }
+            _cards = cards;
+        }
+        catch { _error = true; }
+    }
+
+    async Task JackIn(TplCard card)
+    {
+        var ok = await JS.InvokeAsync<bool>("confirm",
+            $"Load “{card.Name}” into the builder? Your current status bar will be replaced.");
+        if (!ok) return;
+        State.ReplaceTheme(Theme.FromJson(card.ThemeJson), remixed: true);
+        Nav.NavigateTo("build");
+    }
+
+    async Task CopyLink(TplCard card)
+    {
+        var link = Nav.BaseUri + "#t=" + ThemeCodec.Encode(Theme.FromJson(card.ThemeJson));
+        var ok = await JS.InvokeAsync<bool>("sbCopy", link);
+        if (ok) Toasts.Show("✓ LINK COPIED", "spread the warez");
+        else Toasts.Show("copy failed — select the text and copy manually", error: true);
+    }
+}
