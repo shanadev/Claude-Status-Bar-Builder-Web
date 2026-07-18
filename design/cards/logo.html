@@ -1,0 +1,110 @@
+<!-- @dsCard group="Brand" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: logo (chevron stack).
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo — Chevron Stack</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(255,138,92,.6), 0 0 20px rgba(255,138,92,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:76ch; }
+
+  /* the mark — three nested powerline caps, green → cyan → terracotta */
+  .mark { position:relative; display:inline-block; }
+  .mark i { position:absolute; inset:0; clip-path:polygon(0 0, 68% 50%, 0 100%); }
+  .mark .c1 { background:var(--gib-green); box-shadow:0 0 10px rgba(0,255,102,.5); }
+  .mark .c2 { left:22%; background:var(--gib-cyan); }
+  .mark .c3 { left:44%; background:var(--gib-claude); }
+  .m-hero { width:120px; height:104px; }
+  .m-64 { width:64px; height:56px; } .m-32 { width:32px; height:28px; } .m-16 { width:16px; height:14px; }
+
+  .hero { display:flex; align-items:center; gap:32px; flex-wrap:wrap; padding:28px 24px;
+    background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; margin-bottom:14px; }
+  .word { font-weight:700; text-transform:uppercase; letter-spacing:.12em; font-size:22px;
+    color:var(--gib-bright); }
+  .word i { font-style:normal; color:var(--gib-claude); }
+  .word small { display:block; font-size:9px; letter-spacing:.3em; color:var(--gib-dim);
+    font-weight:400; margin-top:4px; }
+
+  .sizes { display:flex; align-items:flex-end; gap:26px; padding:20px 24px 16px;
+    background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; margin-bottom:14px; }
+  .sz { text-align:center; }
+  .szlab { font-size:9px; color:var(--gib-faint); margin-top:8px; }
+  .tile { display:inline-flex; align-items:center; justify-content:center; background:var(--gib-void);
+    border:1px solid var(--gib-line); border-radius:6px; padding:8px; }
+
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:26px 0 12px; }
+  .note { color:var(--gib-faint); font-size:11px; max-width:78ch; }
+  table { width:100%; border-collapse:collapse; font-size:12px; max-width:640px; }
+  td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+
+  .passed { display:flex; gap:28px; align-items:center; flex-wrap:wrap; opacity:.5; padding:14px 24px;
+    background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; font-size:11px;
+    color:var(--gib-dim); }
+  .markA { font-weight:700; color:var(--gib-green); font-size:20px; }
+  .markA .blk { display:inline-block; width:.55em; height:1em; background:var(--gib-claude); margin:0 .1em; }
+  .markC { position:relative; display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; }
+  .markC .globe { width:30px; height:30px; border-radius:50%; border:2px solid var(--gib-green);
+    background:radial-gradient(circle, #0f2a1c 30%, #071510 70%); }
+  .markC .ring { position:absolute; left:-14%; right:-14%; height:8px; border-radius:50%;
+    transform:rotate(-16deg); border:1px solid rgba(255,138,92,.7); background:var(--gib-claude); }
+</style>
+</head>
+<body>
+  <h1>Logo — chevron stack</h1>
+  <p class="sub">Locked (Steve, 2026-07-17). Three nested powerline caps — green → cyan → terracotta,
+  the exact separator geometry every theme ships. Doubles as favicon, social card, and the desktop
+  app icon. Pure vector: ships as SVG with a 16px-tuned ICO fallback for the desktop app.</p>
+
+  <div class="hero">
+    <span class="mark m-hero"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span>
+    <span class="word">Hack the <i>Claude</i><br>Status Bar<small>// build · preview · jack out</small></span>
+  </div>
+
+  <div class="sizes">
+    <span class="sz"><span class="mark m-64"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span><div class="szlab">64 — social / readme</div></span>
+    <span class="sz"><span class="mark m-32"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span><div class="szlab">32 — favicon / taskbar</div></span>
+    <span class="sz"><span class="mark m-16"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span><div class="szlab">16 — tab</div></span>
+    <span class="sz"><span class="tile"><span class="mark m-32"><i class="c1"></i><i class="c2"></i><i class="c3"></i></span></span><div class="szlab">light bg — void tile</div></span>
+  </div>
+
+  <h2>Rules</h2>
+  <table>
+    <tr><td>lockup</td><td>"Claude" always in --gib-claude inside a --gib-bright line; tagline in
+      micro caps, dim; mark-only below 120px of horizontal space</td></tr>
+    <tr><td>clear space</td><td>one chevron width on all sides; nothing glows inside it</td></tr>
+    <tr><td>light backgrounds</td><td>never recolor the neons — the mark sits on a --gib-void rounded
+      tile (README, GitHub social card, docs)</td></tr>
+    <tr><td>boot reveal</td><td>the three caps slide in left-to-right (green, cyan, terracotta) over
+      ~400ms, one glitch twitch on land, then hold; reduced-motion shows the finished mark</td></tr>
+    <tr><td>assets</td><td>logo.svg (mark), logo-lockup.svg, favicon.svg + favicon.ico (16/32),
+      social-card.png 1200×630 — generated in Phase 2, kept in wwwroot/brand/</td></tr>
+  </table>
+
+  <h2>Considered &amp; passed</h2>
+  <div class="passed">
+    <span><span class="markA">[<span class="blk"></span>]</span> &nbsp;A — cursor bracket: instant terminal read, but generic</span>
+    <span><span class="markC"><span class="globe"></span><span class="ring"></span></span> &nbsp;C — hack the planet: great at hero size, mud at 16px, joke-first</span>
+  </div>
+</body>
+</html>

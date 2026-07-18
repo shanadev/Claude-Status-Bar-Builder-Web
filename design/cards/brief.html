@@ -1,0 +1,124 @@
+<!-- @dsCard group="Brand" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: art direction brief.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Art Direction — Full Gibson</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body {
+    background:var(--gib-void); color:var(--gib-text); font:14px/1.55 var(--mono);
+    padding:32px; position:relative;
+  }
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  }
+  .tag {
+    display:inline-block; font-size:10px; letter-spacing:.25em; text-transform:uppercase;
+    color:var(--gib-cyan); border:1px solid var(--gib-cyan); padding:3px 10px; border-radius:2px;
+    box-shadow:0 0 8px rgba(0,229,255,.35), inset 0 0 8px rgba(0,229,255,.15); margin-bottom:16px;
+  }
+  h1 {
+    font-size:34px; line-height:1.1; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--gib-bright); text-shadow:0 0 6px rgba(0,255,102,.7), 0 0 24px rgba(0,255,102,.35);
+    margin-bottom:6px;
+  }
+  h1 .accent { color:var(--gib-claude); text-shadow:0 0 6px rgba(255,138,92,.8), 0 0 24px rgba(255,138,92,.4); }
+  .sub { color:var(--gib-dim); margin-bottom:28px; }
+  h2 {
+    font-size:13px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:28px 0 12px;
+  }
+  .pillars { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+  .pillar { background:var(--gib-surface); border:1px solid var(--gib-line); border-radius:3px; padding:14px 16px; }
+  .pillar b { color:var(--gib-green); display:block; margin-bottom:4px; }
+  .pillar span { color:var(--gib-dim); font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--gib-faint); font-size:10px; text-transform:uppercase; letter-spacing:.15em; padding:6px 10px; }
+  td { padding:7px 10px; border-top:1px solid var(--gib-line); }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+  td:last-child { color:var(--gib-dim); }
+  .dodont { display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:13px; }
+  .dodont div { border:1px solid var(--gib-line); border-radius:3px; padding:12px 16px; background:var(--gib-surface); }
+  .dodont b { display:block; font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:8px; }
+  .do b { color:var(--gib-green); } .dont b { color:var(--gib-red); }
+  ul { list-style:none; } li { padding:3px 0 3px 18px; position:relative; color:var(--gib-dim); }
+  .do li::before { content:">"; position:absolute; left:0; color:var(--gib-green); }
+  .dont li::before { content:"x"; position:absolute; left:0; color:var(--gib-red); }
+  .egg { color:var(--gib-faint); font-size:11px; margin-top:24px; }
+</style>
+</head>
+<body>
+  <span class="tag">Art direction — v1</span>
+  <h1>Hack the <span class="accent">Claude</span> Status Bar</h1>
+  <p class="sub">Full Gibson. Hackers (1995) by way of a modern design system — neon on black glass, CRT
+  phosphor, mono type everywhere. Slick, not kitsch. CSS-only effects, fully responsive,
+  <code>prefers-reduced-motion</code> respected throughout.</p>
+
+  <h2>Pillars</h2>
+  <div class="pillars">
+    <div class="pillar"><b>The terminal is the hero</b><span>The live xterm.js preview is center stage.
+      Chrome recedes: dark panels, hairline borders, neon only where it earns attention.</span></div>
+    <div class="pillar"><b>The Gibson, not the garbage file</b><span>Premium neon minimalism. One or two
+      glowing accents per view, generous darkness between them. Restraint is the aesthetic.</span></div>
+    <div class="pillar"><b>CRT authenticity</b><span>Scanlines, phosphor glow, blinking block cursor,
+      glitch on transition. Subtle enough to work for eight hours straight.</span></div>
+    <div class="pillar"><b>Zero-weight effects</b><span>Everything is CSS: gradients, clip-path glitch,
+      transform grids. No canvas backdrops, no video, no external fonts beyond the site's own.</span></div>
+  </div>
+
+  <h2>Component inventory (planned cards)</h2>
+  <table>
+    <tr><th>Card</th><th>What it covers</th></tr>
+    <tr><td>colors</td><td>Token palette: voids, surfaces, seven neons, text ramp, semantic mapping, glow recipes</td></tr>
+    <tr><td>type</td><td>Mono-only scale: display, headings, body, micro labels, terminal specimen</td></tr>
+    <tr><td>effects</td><td>Scanlines, roll bar, glitch, neon grid floor, cursor blink — with reduced-motion story</td></tr>
+    <tr><td>element-palette</td><td>Browsable list of the 36 status-line elements, drag source</td></tr>
+    <tr><td>segment-canvas</td><td>The build surface: segments, separators, per-section styling entry</td></tr>
+    <tr><td>style-panel</td><td>Color/cap/padding controls, RGB picker, per-element options</td></tr>
+    <tr><td>preview-terminal</td><td>xterm.js frame styled as a CRT monitor, cols readout</td></tr>
+    <tr><td>icon-browser</td><td>Search + grid over icons.json (Nerd Font + emoji)</td></tr>
+    <tr><td>export-screen</td><td>Theme link, one-liner installer, "paste into Claude Code", manual download</td></tr>
+    <tr><td>boot-sequence</td><td>Skippable dial-up/BIOS intro, logo reveal</td></tr>
+    <tr><td>logo</td><td>Wordmark + mark (doubles as desktop app icon)</td></tr>
+  </table>
+
+  <h2>Voice</h2>
+  <p style="color:var(--gib-dim); font-size:13px;">Hacker-movie flavor in small doses: button copy and
+  empty states may say <i style="color:var(--gib-green)">jack in</i>, <i style="color:var(--gib-green)">crash and burn</i>,
+  <i style="color:var(--gib-green)">mess with the best</i>. Instructional copy stays plain and precise.
+  Never let a joke block comprehension of an install step.</p>
+
+  <h2>Rules</h2>
+  <div class="dodont">
+    <div class="do"><b>Always</b><ul>
+      <li>Mono type for every glyph on the site</li>
+      <li>Neon = interactive or semantic; gray = inert</li>
+      <li>Static fallback for every animation</li>
+      <li>AA contrast for body text on all surfaces</li>
+    </ul></div>
+    <div class="dont"><b>Never</b><ul>
+      <li>More than two neon hues glowing in one region</li>
+      <li>Glitch effects on text the user is reading</li>
+      <li>Motion that loops faster than 3s in the user's focus area</li>
+      <li>Easter eggs that gate or obscure real functionality</li>
+    </ul></div>
+  </div>
+
+  <p class="egg">// easter eggs: konami code, "hack the planet" in console, RISC is good. Discoverable, never shouted.</p>
+</body>
+</html>

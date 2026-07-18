@@ -1,0 +1,190 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: style panel.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style Panel</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,255,102,.6), 0 0 20px rgba(0,255,102,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:74ch; }
+  .wrap { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+
+  .panel { width:320px; background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; }
+  .p-head { display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+    border-bottom:1px solid var(--gib-line); }
+  .p-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.22em; color:var(--gib-magenta); }
+  .p-elem { font-size:11px; color:var(--gib-dim); }
+  .sect { padding:12px 14px; border-bottom:1px solid var(--gib-line); }
+  .sect:last-child { border-bottom:none; }
+  .s-lab { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint); margin-bottom:8px; }
+
+  .segctl { display:flex; border:1px solid var(--gib-line); border-radius:2px; overflow:hidden; margin-bottom:10px; }
+  .segctl span { flex:1; text-align:center; font-size:11px; padding:6px 0; color:var(--gib-dim); cursor:pointer; }
+  .segctl span:hover { color:var(--gib-bright); }
+  .segctl .on { background:rgba(0,229,255,.1); color:var(--gib-cyan);
+    box-shadow:inset 0 0 8px rgba(0,229,255,.15); }
+  .segctl span + span { border-left:1px solid var(--gib-line); }
+
+  .swrow { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .swrow .k { font-size:11px; color:var(--gib-dim); width:26px; }
+  .sw { width:20px; height:20px; border-radius:2px; border:1px solid rgba(255,255,255,.12); cursor:pointer; }
+  .sw.on { outline:2px solid var(--gib-cyan); outline-offset:1px; box-shadow:0 0 8px rgba(0,229,255,.5); }
+  .hex { margin-left:auto; font-size:11px; color:var(--gib-text); background:var(--gib-surface);
+    border:1px solid var(--gib-line); border-radius:2px; padding:4px 7px; }
+
+  .picker { border:1px solid var(--gib-line); border-radius:2px; overflow:hidden; }
+  .sv { height:96px; background:
+      linear-gradient(0deg, #000, transparent),
+      linear-gradient(90deg, #fff, transparent),
+      var(--gib-claude); position:relative; }
+  .sv .dot { position:absolute; top:26%; right:18%; width:12px; height:12px; border-radius:50%;
+    border:2px solid #fff; box-shadow:0 0 6px rgba(0,0,0,.8); }
+  .hue { height:12px; background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); position:relative; }
+  .hue .dot { position:absolute; top:-2px; left:8%; width:8px; height:16px; border:2px solid #fff;
+    border-radius:2px; box-shadow:0 0 5px rgba(0,0,0,.8); }
+
+  .attrs { display:flex; gap:6px; }
+  .attr { width:34px; height:30px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--gib-line); border-radius:2px; color:var(--gib-dim); cursor:pointer; font-size:13px; }
+  .attr:hover { color:var(--gib-bright); border-color:var(--gib-cyan); }
+  .attr.on { color:var(--gib-cyan); border-color:var(--gib-cyan);
+    background:rgba(0,229,255,.1); box-shadow:0 0 8px rgba(0,229,255,.35); }
+
+  .iconrow { display:flex; align-items:center; gap:10px; }
+  .icochip { width:36px; height:36px; display:flex; align-items:center; justify-content:center;
+    background:var(--gib-surface); border:1px solid var(--gib-line); border-radius:2px; font-size:17px; }
+  .browse { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gib-cyan);
+    border:1px solid var(--gib-cyan); border-radius:2px; padding:7px 12px; cursor:pointer; }
+  .browse:hover { background:rgba(0,229,255,.08); box-shadow:0 0 8px rgba(0,229,255,.4); }
+
+  .selrow { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .selrow .k { font-size:11px; color:var(--gib-dim); }
+  .sel { font-size:11px; color:var(--gib-text); background:var(--gib-surface);
+    border:1px solid var(--gib-line); border-radius:2px; padding:5px 8px; cursor:pointer; }
+  .sel i { font-style:normal; color:var(--gib-faint); margin-left:8px; }
+
+  .ramp { display:flex; align-items:center; gap:0; height:22px; border-radius:2px; overflow:hidden;
+    margin-bottom:6px; }
+  .ramp div { flex:1; height:100%; display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:#04060a; font-weight:700; letter-spacing:.1em; }
+  .stops { display:flex; justify-content:space-between; font-size:10px; color:var(--gib-faint); }
+  .stops b { color:var(--gib-dim); font-weight:400; cursor:pointer; border-bottom:1px dotted var(--gib-faint); }
+
+  .toggle { display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--gib-dim); cursor:pointer; }
+  .tk { width:30px; height:16px; border-radius:8px; background:var(--gib-surface);
+    border:1px solid var(--gib-line); position:relative; }
+  .tk::after { content:""; position:absolute; top:2px; left:3px; width:10px; height:10px; border-radius:50%;
+    background:var(--gib-faint); transition:left .12s, background .12s; }
+  .toggle.on .tk::after { left:15px; background:var(--gib-green); box-shadow:0 0 6px rgba(0,255,102,.7); }
+  .toggle.on { color:var(--gib-text); }
+
+  .notes { flex:1; min-width:260px; }
+  .notes h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:0 0 12px; }
+  .notes table { width:100%; border-collapse:collapse; font-size:12px; }
+  .notes td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  .notes td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Style panel</h1>
+  <p class="sub">Right-rail inspector for the selected segment. Everything writes to the theme JSON and
+  re-renders the terminal on input — no apply button, ever.</p>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="p-head"><span class="p-title">Style</span><span class="p-elem">◆ Model — "Fable 5"</span></div>
+
+      <div class="sect">
+        <div class="s-lab">part</div>
+        <div class="segctl"><span>icon</span><span class="on">label</span><span>value</span></div>
+        <div class="swrow"><span class="k">fg</span>
+          <span class="sw" style="background:#04060a"></span><span class="sw" style="background:#f0fff7"></span>
+          <span class="sw on" style="background:#00e5ff"></span><span class="sw" style="background:#00ff66"></span>
+          <span class="sw" style="background:#ff2ea6"></span><span class="sw" style="background:#ffb300"></span>
+          <span class="sw" style="background:#ff8a5c"></span><span class="sw" style="background:#8b5cff"></span>
+          <span class="hex">#00E5FF</span></div>
+        <div class="swrow"><span class="k">bg</span>
+          <span class="sw on" style="background:#ff8a5c"></span><span class="sw" style="background:#0f1720"></span>
+          <span class="sw" style="background:#1e2c3c"></span><span class="sw" style="background:#000"></span>
+          <span class="hex">#FF8A5C</span></div>
+        <div class="picker"><div class="sv"><span class="dot"></span></div><div class="hue"><span class="dot"></span></div></div>
+      </div>
+
+      <div class="sect">
+        <div class="s-lab">text</div>
+        <div class="attrs">
+          <span class="attr on" style="font-weight:700">B</span>
+          <span class="attr" style="opacity:.7">D</span>
+          <span class="attr on" style="font-style:italic">I</span>
+          <span class="attr" style="text-decoration:underline">U</span>
+        </div>
+      </div>
+
+      <div class="sect">
+        <div class="s-lab">icon</div>
+        <div class="iconrow"><span class="icochip">◆</span>
+          <span style="font-size:11px; color:var(--gib-dim);">nf-md-diamond</span>
+          <span class="browse" style="margin-left:auto;">Browse</span></div>
+      </div>
+
+      <div class="sect">
+        <div class="s-lab">format</div>
+        <div class="selrow"><span class="k">value</span><span class="sel">compact — 18.6k<i>▾</i></span></div>
+        <div class="selrow"><span class="k">min width</span><span class="sel">8 ch<i>▾</i></span></div>
+        <div class="selrow" style="margin-bottom:0;"><span class="k">label</span>
+          <span class="toggle on"><span class="tk"></span>show</span></div>
+      </div>
+
+      <div class="sect">
+        <div class="s-lab">thresholds — context %</div>
+        <div class="ramp">
+          <div style="background:var(--gib-green); flex:6;">&lt; 60</div>
+          <div style="background:var(--gib-amber); flex:2.5;">60–85</div>
+          <div style="background:var(--gib-red); flex:1.5;">&gt; 85</div>
+        </div>
+        <div class="stops"><b>edit stops</b><b>+ add stop</b></div>
+      </div>
+
+      <div class="sect">
+        <span class="toggle on"><span class="tk"></span>hide when zero / absent</span>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Behavior</h2>
+      <table>
+        <tr><td>parts</td><td>icon / label / value each carry independent fg+bg; part selector scopes
+          the swatches and picker below it</td></tr>
+        <tr><td>swatches</td><td>first row = theme palette (the 7 neons + surfaces); picker + hex for
+          truecolor; 16-ANSI and 256 modes swap the swatch set</td></tr>
+        <tr><td>live edit</td><td>hex field accepts paste; picker drag updates the terminal at 60fps
+          (theme write debounced to idle)</td></tr>
+        <tr><td>thresholds</td><td>ramp editor appears only for numeric elements; stops drag horizontally;
+          colors come from the palette</td></tr>
+        <tr><td>empty state</td><td>no selection → panel shows theme-level controls: separator style
+          (chevron/round/slant/flame/plain), gap, capsule vs flat, palette preset</td></tr>
+        <tr><td>reset</td><td>every section label gets a "↺" on hover — reverts to theme default</td></tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

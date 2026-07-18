@@ -1,0 +1,136 @@
+<!-- @dsCard group="Effects" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: CRT & glitch effects.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effects — scanlines, glitch, grid</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(139,92,255,.6), 0 0 20px rgba(139,92,255,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; }
+  .fx { border:1px solid var(--gib-line); border-radius:3px; background:var(--gib-bg);
+    margin-bottom:12px; overflow:hidden; }
+  .fx .label { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
+    padding:8px 14px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    border-bottom:1px solid var(--gib-line); }
+  .fx .demo { position:relative; min-height:110px; display:flex; align-items:center;
+    justify-content:center; padding:24px; }
+
+  /* 1 — scanlines + vignette: sits on every screen-like surface */
+  .scanlines::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px); }
+  .vignette::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%); }
+
+  /* 2 — roll bar: one bright band drifting down, 8s, screen surfaces only */
+  .rollbar { overflow:hidden; }
+  .rollbar .band { position:absolute; left:0; right:0; height:64px; top:-64px; pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(210,255,230,.05) 45%, rgba(210,255,230,.09) 50%, rgba(210,255,230,.05) 55%, transparent);
+    animation:roll 8s linear infinite; }
+  @keyframes roll { to { top:100%; } }
+
+  /* 3 — glitch: dormant most of the time, one twitch per ~4s; ::before cyan, ::after magenta */
+  .glitch { position:relative; font-size:34px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--gib-bright); }
+  .glitch::before, .glitch::after { content:attr(data-text); position:absolute; inset:0; opacity:0; }
+  .glitch::before { color:var(--gib-cyan); }
+  .glitch::after { color:var(--gib-magenta); }
+  .glitch::before { animation:gl-a 4.1s steps(1) infinite; }
+  .glitch::after { animation:gl-b 4.1s steps(1) infinite; }
+  @keyframes gl-a {
+    0%, 91% { opacity:0; }
+    92% { opacity:.85; transform:translate(-3px,1px); clip-path:inset(12% 0 58% 0); }
+    94% { opacity:.85; transform:translate(2px,-1px); clip-path:inset(60% 0 8% 0); }
+    96%, 100% { opacity:0; } }
+  @keyframes gl-b {
+    0%, 92% { opacity:0; }
+    93% { opacity:.85; transform:translate(3px,-1px); clip-path:inset(55% 0 20% 0); }
+    95% { opacity:.85; transform:translate(-2px,2px); clip-path:inset(5% 0 70% 0); }
+    97%, 100% { opacity:0; } }
+
+  /* 4 — grid floor: neon wireframe receding to horizon; page backdrop, fixed, behind panels */
+  .gridfloor { background:var(--gib-void); }
+  .gridfloor .horizon { position:absolute; inset:0; overflow:hidden; }
+  .gridfloor .plane { position:absolute; left:-50%; right:-50%; bottom:-30%; height:75%;
+    transform:perspective(340px) rotateX(62deg);
+    background:
+      linear-gradient(90deg, rgba(0,229,255,.28) 0 1px, transparent 1px 100%) 0 0/44px 100%,
+      linear-gradient(0deg, rgba(0,229,255,.28) 0 1px, transparent 1px 100%) 0 0/100% 34px; }
+  .gridfloor .glowline { position:absolute; left:0; right:0; top:26%; height:1px;
+    background:linear-gradient(90deg, transparent, var(--gib-violet), transparent);
+    box-shadow:0 0 12px 1px rgba(139,92,255,.6); }
+  .gridfloor .fade { position:absolute; inset:0;
+    background:linear-gradient(180deg, var(--gib-void) 18%, transparent 45%); }
+
+  /* 5 — focus ring + neon hover for interactive chrome */
+  .btn { font:600 13px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase;
+    color:var(--gib-cyan); background:transparent; border:1px solid var(--gib-cyan);
+    border-radius:2px; padding:10px 18px; cursor:pointer; transition:box-shadow .15s, background .15s; }
+  .btn:hover { background:rgba(0,229,255,.08);
+    box-shadow:0 0 10px rgba(0,229,255,.5), inset 0 0 10px rgba(0,229,255,.15); }
+  .btn:focus-visible { outline:2px solid var(--gib-cyan); outline-offset:2px; }
+  .btn.brand { color:var(--gib-claude); border-color:var(--gib-claude); }
+  .btn.brand:hover { background:rgba(255,138,92,.08);
+    box-shadow:0 0 10px rgba(255,138,92,.5), inset 0 0 10px rgba(255,138,92,.15); }
+
+  @media (prefers-reduced-motion:reduce) {
+    .rollbar .band { animation:none; display:none; }
+    .glitch::before, .glitch::after { animation:none; opacity:0; }
+  }
+  .note { color:var(--gib-faint); font-size:11px; margin-top:20px; max-width:78ch; }
+</style>
+</head>
+<body>
+  <h1>Effects</h1>
+  <p class="sub">All CSS, all optional. Every effect has a static fallback under
+  <code>prefers-reduced-motion</code> — the site stays Full Gibson even when nothing moves.</p>
+
+  <div class="fx"><div class="label"><span>scanlines + vignette</span><span>every screen-like surface (terminal, boot, hero)</span></div>
+    <div class="demo scanlines vignette" style="background:#000;">
+      <span style="color:var(--gib-green); text-shadow:0 0 8px rgba(0,255,102,.7);">phosphor on glass</span>
+    </div></div>
+
+  <div class="fx"><div class="label"><span>roll bar — 8s drift</span><span>terminal + boot only, never on forms</span></div>
+    <div class="demo scanlines rollbar" style="background:#000;">
+      <div class="band"></div>
+      <span style="color:var(--gib-dim);">a single soft band, barely there</span>
+    </div></div>
+
+  <div class="fx"><div class="label"><span>glitch — dormant, one twitch / 4s</span><span>headings + transitions; never body copy</span></div>
+    <div class="demo">
+      <span class="glitch" data-text="The Gibson">The Gibson</span>
+    </div></div>
+
+  <div class="fx"><div class="label"><span>grid floor — page backdrop</span><span>fixed behind panels, fades out by 45% viewport height</span></div>
+    <div class="demo gridfloor" style="min-height:170px;">
+      <div class="horizon"><div class="plane"></div><div class="glowline"></div><div class="fade"></div></div>
+      <span style="position:relative; color:var(--gib-dim);">panels float above the wireframe city</span>
+    </div></div>
+
+  <div class="fx"><div class="label"><span>interactive chrome</span><span>hover glow ≤ 150ms; focus ring always visible</span></div>
+    <div class="demo" style="gap:16px;">
+      <button class="btn">Jack in</button>
+      <button class="btn brand">Install</button>
+    </div></div>
+
+  <p class="note">// budget: one roll bar per page, glitch reserved for the page title and
+  view transitions, grid floor only on the landing/hero. Inside the builder workspace the only
+  motion is the terminal cursor and hover feedback — the effects sell the fantasy at the edges,
+  the tool stays calm in the middle.</p>
+</body>
+</html>

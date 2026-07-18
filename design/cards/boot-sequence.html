@@ -1,0 +1,120 @@
+<!-- @dsCard group="Flows" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: boot sequence.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boot Sequence</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,255,102,.6), 0 0 20px rgba(0,255,102,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:76ch; }
+
+  .frames { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px; }
+  .frame { border:1px solid var(--gib-line); border-radius:3px; overflow:hidden; background:var(--gib-bg); }
+  .f-label { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
+    padding:8px 12px; border-bottom:1px solid var(--gib-line); display:flex; justify-content:space-between; }
+  .f-label b { color:var(--gib-dim); font-weight:400; }
+  .scr { position:relative; background:#000; aspect-ratio:16/10; padding:14px; font-size:11px;
+    line-height:1.7; overflow:hidden; }
+  .scr::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.3) 0 1px, transparent 1px 3px); }
+  .skip { position:absolute; right:8px; bottom:8px; z-index:2; font-size:9px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--gib-dim); border:1px solid var(--gib-line);
+    border-radius:2px; padding:4px 9px; background:rgba(10,16,22,.85); }
+  .g { color:var(--gib-green); } .c { color:var(--gib-cyan); } .d { color:var(--gib-faint); }
+  .a { color:var(--gib-amber); }
+  .logo { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:6px; }
+  .logo .word { font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:.14em;
+    color:var(--gib-bright); text-shadow:0 0 8px rgba(0,255,102,.7), 0 0 28px rgba(0,255,102,.35); }
+  .logo .word i { font-style:normal; color:var(--gib-claude);
+    text-shadow:0 0 8px rgba(255,138,92,.8), 0 0 28px rgba(255,138,92,.4); }
+  .logo .tag2 { font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:var(--gib-dim); }
+  .bar { width:64%; height:5px; border:1px solid var(--gib-line); border-radius:2px; margin-top:6px; }
+  .bar i { display:block; height:100%; width:82%; background:var(--gib-green);
+    box-shadow:0 0 8px rgba(0,255,102,.7); }
+
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:26px 0 12px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  td, th { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim);
+    vertical-align:top; text-align:left; }
+  th { color:var(--gib-faint); font-size:10px; text-transform:uppercase; letter-spacing:.15em; border-top:none; }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Boot sequence</h1>
+  <p class="sub">First visit only: a 3½-second dial-in before the landing hero. Every frame is
+  skippable from the first paint; a repeat visitor never sees it again (localStorage). It's a
+  greeting, not a gate — the tool must feel instant the moment it matters.</p>
+
+  <div class="frames">
+    <div class="frame">
+      <div class="f-label"><span>frame 1 — dial</span><b>0 – 1.2s</b></div>
+      <div class="scr">
+        <div class="d">ATDT 555-0199 . . .</div>
+        <div class="g">CARRIER 28800 ▚▞▚▞▚</div>
+        <div class="d">negotiating<span class="c"> ▓▓▓▒▒░░░</span></div>
+        <div class="g">CONNECT</div>
+        <span class="skip">skip ⏎</span>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="f-label"><span>frame 2 — access</span><b>1.2 – 2.4s</b></div>
+      <div class="scr">
+        <div class="d">&gt; auth handshake</div>
+        <div class="d">&gt; mounting /gibson/statusbar</div>
+        <div class="a">&gt; RISC architecture detected: good</div>
+        <div class="g">&gt; ACCESS GRANTED</div>
+        <span class="skip">skip ⏎</span>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="f-label"><span>frame 3 — reveal</span><b>2.4 – 3.5s</b></div>
+      <div class="scr">
+        <div class="logo">
+          <div class="word">Hack the <i>Claude</i> Status Bar</div>
+          <div class="tag2">// build · preview · jack out</div>
+          <div class="bar"><i></i></div>
+        </div>
+        <span class="skip">skip ⏎</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Spec</h2>
+  <table>
+    <tr><th>Rule</th><th>Detail</th></tr>
+    <tr><td>duration</td><td>3.5s hard cap, then auto-advance to the hero — no interaction required</td></tr>
+    <tr><td>skip</td><td>any key, click, tap, or the visible chip; skip target ≥ 44px on touch;
+      focus starts on the skip control for screen readers</td></tr>
+    <tr><td>once</td><td>localStorage "booted" flag — replays only via an easter-egg "reboot" link in
+      the footer; deep links (theme URLs) and the builder route never boot</td></tr>
+    <tr><td>reduced motion</td><td>sequence is skipped entirely; hero fades in at 200ms — the flag,
+      not a stripped-down animation</td></tr>
+    <tr><td>text cadence</td><td>lines appear per-line (steps, ~90ms) — no per-character typing;
+      frame 3 title glitch-twitches once on entry, then holds still</td></tr>
+    <tr><td>audio</td><td>none. The modem screech stays imaginary — no autoplay, no audio assets</td></tr>
+    <tr><td>weight</td><td>pure CSS/JS in the WASM shell's index.html — runs while the runtime loads,
+      so boot time is honest work, not added wait</td></tr>
+  </table>
+</body>
+</html>

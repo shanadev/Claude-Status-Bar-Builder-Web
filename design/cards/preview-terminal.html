@@ -1,0 +1,125 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: preview terminal.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview Terminal</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,255,102,.6), 0 0 20px rgba(0,255,102,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:74ch; }
+
+  .monitor { background:linear-gradient(180deg, #131a24, #0b1119); border:1px solid var(--gib-line);
+    border-radius:8px; padding:14px 14px 10px; box-shadow:0 12px 40px rgba(0,0,0,.6); }
+  .screen { position:relative; background:#000; border-radius:4px; overflow:hidden;
+    border:1px solid #0a141d; padding:18px 16px 22px; }
+  .screen::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5) 100%); }
+  .screen::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.3) 0 1px, transparent 1px 3px); }
+  .band { position:absolute; left:0; right:0; height:56px; top:-56px; pointer-events:none; z-index:1;
+    background:linear-gradient(180deg, transparent, rgba(210,255,230,.05) 45%, rgba(210,255,230,.08) 50%, rgba(210,255,230,.05) 55%, transparent);
+    animation:roll 8s linear infinite; }
+  @keyframes roll { to { top:100%; } }
+  @media (prefers-reduced-motion:reduce) { .band { animation:none; display:none; } }
+
+  .line { display:flex; align-items:stretch; font-size:13px; white-space:nowrap; overflow-x:auto; }
+  .ts { position:relative; display:flex; align-items:center; gap:6px; padding:5px 8px 5px 16px;
+    color:#04060a; font-weight:600; margin-right:10px; }
+  .ts:first-child { padding-left:9px; }
+  .ts .cap { position:absolute; left:100%; top:0; bottom:0; width:10px; z-index:2;
+    background:inherit; clip-path:polygon(0 0, 100% 50%, 0 100%); }
+  .plain { color:var(--gib-dim); align-self:center; padding:0 6px; }
+
+  .statusbar { display:flex; justify-content:space-between; align-items:center; gap:16px;
+    padding:9px 4px 2px; flex-wrap:wrap; }
+  .meta { font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:var(--gib-faint); }
+  .meta b { color:var(--gib-dim); font-weight:400; }
+  .knobs { display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .knob { display:flex; align-items:center; gap:7px; font-size:10px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--gib-faint); }
+  .slider { width:90px; height:3px; background:var(--gib-line); border-radius:2px; position:relative; }
+  .slider .fill { position:absolute; left:0; top:0; bottom:0; border-radius:2px;
+    background:var(--gib-cyan); box-shadow:0 0 6px rgba(0,229,255,.6); }
+  .slider .thumb { position:absolute; top:-4px; width:11px; height:11px; border-radius:50%;
+    background:var(--gib-bright); border:2px solid var(--gib-cyan); box-shadow:0 0 8px rgba(0,229,255,.7); }
+  .tk { width:30px; height:16px; border-radius:8px; background:var(--gib-surface);
+    border:1px solid var(--gib-line); position:relative; cursor:pointer; }
+  .tk::after { content:""; position:absolute; top:2px; left:3px; width:10px; height:10px;
+    border-radius:50%; background:var(--gib-faint); }
+  .tk.on::after { left:15px; background:var(--gib-green); box-shadow:0 0 6px rgba(0,255,102,.7); }
+
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:26px 0 12px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Preview terminal</h1>
+  <p class="sub">The hero. A real xterm.js instance dressed as a CRT monitor — bezel, vignette,
+  scanlines, one soft roll bar. The whole costume is a toggle: "crt fx" off strips it to a bare
+  terminal for a clean look at the raw line. What renders here is byte-identical to what the
+  renderer emits in a real terminal. Below the bezel: sample-data sliders that exercise thresholds live.</p>
+
+  <div class="monitor">
+    <div class="screen">
+      <div class="band"></div>
+      <div class="line">
+        <span class="ts" style="background:var(--gib-claude);">◆ Fable 5<span class="cap"></span></span>
+        <span class="ts" style="background:var(--gib-cyan);">▸ ~/gibson<span class="cap"></span></span>
+        <span class="ts" style="background:var(--gib-green);">⎇ main +2 ~1<span class="cap"></span></span>
+        <span class="plain">·</span>
+        <span class="ts" style="background:var(--gib-violet);">◔ 62% ▓▓▓▓▓░░░<span class="cap"></span></span>
+        <span class="ts" style="background:var(--gib-amber);">$ 4.87<span class="cap"></span></span>
+      </div>
+    </div>
+    <div class="statusbar">
+      <span class="meta"><b>cols 160</b> · truecolor · CaskaydiaCove NF · renderer v1.1</span>
+      <div class="knobs">
+        <span class="knob">crt fx<span class="tk on"></span></span>
+        <span class="knob">ctx %<span class="slider"><span class="fill" style="width:62%"></span><span class="thumb" style="left:58%"></span></span></span>
+        <span class="knob">cost<span class="slider"><span class="fill" style="width:30%"></span><span class="thumb" style="left:27%"></span></span></span>
+        <span class="knob">5hr<span class="slider"><span class="fill" style="width:78%"></span><span class="thumb" style="left:74%"></span></span></span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Behavior</h2>
+  <table>
+    <tr><td>fidelity</td><td>xterm.js with the site's CaskaydiaCove NF, rescaleOverlappingGlyphs +
+      customGlyphs on; scrollback 0, scrollbar suppressed; this HTML mock stands in for the pane only</td></tr>
+    <tr><td>cols sync</td><td>terminal cols round-trip into the composer before every render, so flex
+      spacers and right-alignment are truthful; cols readout updates on resize</td></tr>
+    <tr><td>sample data</td><td>sliders drive context % / cost / rate-limit values through the real
+      composer — the way to watch threshold ramps fire; positions persist per session</td></tr>
+    <tr><td>CRT chrome</td><td>bezel + vignette + scanlines are outside the xterm viewport and cost
+      nothing; roll bar is the only motion, and reduced-motion removes it</td></tr>
+    <tr><td>crt fx toggle</td><td>off = bezel, scanlines, vignette and roll bar all gone — flat panel,
+      bare black terminal, nothing between you and the line; default ON, remembered per browser
+      (localStorage), independent of reduced-motion</td></tr>
+    <tr><td>width modes</td><td>preset cols toggle (80 / 120 / 160 / fit) for testing narrow terminals;
+      "fit" tracks the panel width</td></tr>
+    <tr><td>placement</td><td>docked full-width below the canvas; sticks to viewport bottom while the
+      canvas scrolls, monitor chrome slims down under 900px</td></tr>
+  </table>
+</body>
+</html>

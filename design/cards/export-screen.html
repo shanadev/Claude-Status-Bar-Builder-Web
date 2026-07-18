@@ -1,0 +1,126 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: export screen.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export Screen — Jack Out</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(255,138,92,.6), 0 0 20px rgba(255,138,92,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:74ch; }
+
+  .sheet { max-width:640px; background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; }
+  .s-head { padding:14px 18px; border-bottom:1px solid var(--gib-line); }
+  .s-title { font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.1em;
+    color:var(--gib-bright); }
+  .s-sub { font-size:12px; color:var(--gib-dim); margin-top:2px; }
+
+  .linkrow { display:flex; gap:8px; padding:14px 18px; border-bottom:1px solid var(--gib-line); }
+  .link { flex:1; display:flex; align-items:center; overflow:hidden; background:var(--gib-surface);
+    border:1px solid var(--gib-line); border-radius:2px; padding:9px 12px; font-size:12px;
+    color:var(--gib-cyan); white-space:nowrap; }
+  .link .fade { margin-left:-40px; width:40px; height:100%; flex:none;
+    background:linear-gradient(90deg, transparent, var(--gib-surface)); }
+  .copy { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gib-cyan);
+    border:1px solid var(--gib-cyan); border-radius:2px; padding:0 14px; cursor:pointer;
+    display:flex; align-items:center; }
+  .copy:hover { background:rgba(0,229,255,.08); box-shadow:0 0 8px rgba(0,229,255,.4); }
+
+  .tabs { display:flex; border-bottom:1px solid var(--gib-line); }
+  .tab { flex:1; text-align:center; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--gib-dim); padding:11px 6px; cursor:pointer; border-bottom:2px solid transparent; }
+  .tab:hover { color:var(--gib-bright); }
+  .tab.on { color:var(--gib-claude); border-bottom-color:var(--gib-claude);
+    text-shadow:0 0 8px rgba(255,138,92,.5); }
+
+  .pane { padding:16px 18px; }
+  .ostabs { display:flex; gap:6px; margin-bottom:10px; }
+  .os { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gib-dim);
+    border:1px solid var(--gib-line); border-radius:12px; padding:4px 12px; cursor:pointer; }
+  .os.on { color:var(--gib-green); border-color:var(--gib-green); background:rgba(0,255,102,.07); }
+  .code { position:relative; background:#000; border:1px solid var(--gib-line); border-radius:2px;
+    padding:12px 14px; font-size:12px; line-height:1.6; color:var(--gib-green); overflow-x:auto;
+    white-space:pre; }
+  .code .c { color:var(--gib-faint); }
+  .code .copy2 { position:absolute; top:8px; right:8px; font-size:9px; letter-spacing:.15em;
+    text-transform:uppercase; color:var(--gib-dim); border:1px solid var(--gib-line); border-radius:2px;
+    padding:3px 8px; cursor:pointer; background:rgba(10,16,22,.85); }
+  .code .copy2:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
+  .hint { font-size:11px; color:var(--gib-faint); margin-top:10px; }
+  .hint b { color:var(--gib-dim); font-weight:400; }
+
+  .toast { display:inline-flex; align-items:center; gap:10px; margin-top:22px; font-size:12px;
+    background:var(--gib-surface); border:1px solid var(--gib-green); border-radius:2px;
+    padding:9px 14px; color:var(--gib-text); box-shadow:0 0 14px rgba(0,255,102,.25); }
+  .toast b { color:var(--gib-green); font-weight:700; }
+
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:26px 0 12px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; max-width:640px; }
+  td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Export — "Jack out"</h1>
+  <p class="sub">Full-screen takeover when the theme is ready. The theme link is primary (it IS the
+  save format — no accounts, no backend); three install flows below it, most-automated first.</p>
+
+  <div class="sheet">
+    <div class="s-head">
+      <div class="s-title">Jack out</div>
+      <div class="s-sub">Your theme travels in the link. Share it, bookmark it, or install it below.</div>
+    </div>
+    <div class="linkrow">
+      <span class="link">https://hacktheclaudestatusbar.up.railway.app/#t=eJzTVsjMK0nNS8xJVShKLE4tLknMS9E...<span class="fade"></span></span>
+      <span class="copy">Copy link</span>
+    </div>
+    <div class="tabs">
+      <span class="tab on">One-liner</span>
+      <span class="tab">Claude Code</span>
+      <span class="tab">Manual</span>
+    </div>
+    <div class="pane">
+      <div class="ostabs"><span class="os on">windows</span><span class="os">macos</span><span class="os">linux</span></div>
+      <div class="code"><span class="copy2">copy</span><span class="c"># drops renderer + theme in ~/.claude/statusbar, patches settings.json (backup first)</span>
+irm https://hacktheclaudestatusbar.up.railway.app/install.ps1 | iex</div>
+      <div class="hint"><b>What it does:</b> downloads the renderer for your OS, writes theme.json,
+      backs up settings.json, adds the statusLine block. Nothing else touched.</div>
+    </div>
+  </div>
+
+  <span class="toast"><b>✓ LINK COPIED</b> mess with the best</span>
+
+  <h2>The three flows</h2>
+  <table>
+    <tr><td>1 · one-liner</td><td>PS / bash per OS tab, auto-detected from user agent; the whole
+      script is readable at the /install.ps1 URL before running</td></tr>
+    <tr><td>2 · claude code</td><td>a prompt block to paste into Claude Code: "Install this status
+      line: &lt;link&gt; — follow INSTALL.md at &lt;repo&gt;." Claude performs the install; canonical
+      INSTALL.md lives in the repo</td></tr>
+    <tr><td>3 · manual</td><td>renderer binary downloads (win-x64 / osx-arm64 / linux-x64), theme.json
+      download, and the exact settings.json snippet with a copy button</td></tr>
+    <tr><td>toasts</td><td>green confirm with one line of flavor ("mess with the best"); errors are
+      red, flavor-free, and say exactly what to do next</td></tr>
+    <tr><td>re-entry</td><td>opening a theme link lands in the builder with the theme loaded and a
+      "remixed from a shared theme" chip — export is always reachable, never a dead end</td></tr>
+  </table>
+</body>
+</html>

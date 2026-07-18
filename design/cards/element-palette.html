@@ -1,0 +1,120 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: element palette.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Element Palette</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,229,255,.6), 0 0 20px rgba(0,229,255,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:72ch; }
+
+  .rail { width:300px; background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; }
+  .rail-head { padding:12px 14px 10px; border-bottom:1px solid var(--gib-line); }
+  .rail-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.22em;
+    color:var(--gib-magenta); margin-bottom:10px; }
+  .search { display:flex; align-items:center; gap:8px; background:var(--gib-surface);
+    border:1px solid var(--gib-line); border-radius:2px; padding:7px 10px; color:var(--gib-faint); font-size:13px; }
+  .search .caret { display:inline-block; width:.55em; height:1.05em; background:var(--gib-cyan);
+    box-shadow:0 0 6px rgba(0,229,255,.7); animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .search .caret { animation:none; } }
+
+  .cat { border-bottom:1px solid var(--gib-line); }
+  .cat:last-child { border-bottom:none; }
+  .cat-head { display:flex; justify-content:space-between; align-items:center; padding:9px 14px;
+    font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-dim); cursor:pointer; }
+  .cat-head:hover { color:var(--gib-cyan); }
+  .cat-head .n { color:var(--gib-faint); }
+  .chips { padding:2px 10px 12px; display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--gib-text);
+    background:var(--gib-surface); border:1px solid var(--gib-line); border-radius:2px;
+    padding:5px 9px; cursor:grab; transition:border-color .12s, box-shadow .12s; }
+  .chip .ico { color:var(--gib-dim); }
+  .chip:hover { border-color:var(--gib-cyan); color:var(--gib-bright);
+    box-shadow:0 0 8px rgba(0,229,255,.35); }
+  .chip.dragging { border-color:var(--gib-magenta); color:var(--gib-bright);
+    box-shadow:0 0 10px rgba(255,46,166,.5); transform:rotate(-2deg); cursor:grabbing; }
+  .chip.dragging .ico { color:var(--gib-magenta); }
+
+  .row2 { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .notes { flex:1; min-width:260px; }
+  .notes h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:0 0 12px; }
+  .notes table { width:100%; border-collapse:collapse; font-size:12px; }
+  .notes td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  .notes td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Element palette</h1>
+  <p class="sub">Left rail of the builder. All 36 elements grouped in seven categories; search filters
+  as you type. Chips drag onto the segment canvas — hover glows cyan, an in-flight drag goes magenta.</p>
+
+  <div class="row2">
+    <div class="rail">
+      <div class="rail-head">
+        <div class="rail-title">Elements</div>
+        <div class="search">/ <span class="caret"></span><span style="margin-left:auto; font-size:10px; letter-spacing:.15em;">36</span></div>
+      </div>
+      <div class="cat">
+        <div class="cat-head"><span>Session</span><span class="n">8</span></div>
+        <div class="chips">
+          <span class="chip"><span class="ico">◆</span>Model</span>
+          <span class="chip"><span class="ico">◇</span>Effort</span>
+          <span class="chip"><span class="ico">✳</span>Thinking</span>
+          <span class="chip dragging"><span class="ico">✎</span>Output style</span>
+          <span class="chip"><span class="ico">☰</span>Session</span>
+          <span class="chip"><span class="ico">⌁</span>Vim mode</span>
+          <span class="chip"><span class="ico">⚑</span>Agent</span>
+          <span class="chip"><span class="ico">#</span>Version</span>
+        </div>
+      </div>
+      <div class="cat">
+        <div class="cat-head"><span>Context</span><span class="n">5</span></div>
+        <div class="chips">
+          <span class="chip"><span class="ico">◔</span>Used %</span>
+          <span class="chip"><span class="ico">◕</span>Remaining %</span>
+          <span class="chip"><span class="ico">Σ</span>Tokens</span>
+          <span class="chip"><span class="ico">▭</span>Window</span>
+          <span class="chip"><span class="ico">!</span>200k flag</span>
+        </div>
+      </div>
+      <div class="cat"><div class="cat-head"><span>Cost &amp; time</span><span class="n">5</span></div></div>
+      <div class="cat"><div class="cat-head"><span>Git &amp; repo</span><span class="n">6</span></div></div>
+      <div class="cat"><div class="cat-head"><span>Limits</span><span class="n">2</span></div></div>
+      <div class="cat"><div class="cat-head"><span>Extras</span><span class="n">4</span></div></div>
+      <div class="cat"><div class="cat-head"><span>Structure</span><span class="n">6</span></div></div>
+    </div>
+
+    <div class="notes">
+      <h2>Behavior</h2>
+      <table>
+        <tr><td>search</td><td>"/" focuses from anywhere in the workspace; matches name + category + JSON field</td></tr>
+        <tr><td>drag</td><td>chip lifts with magenta glow and -2° tilt; canvas shows a magenta drop line</td></tr>
+        <tr><td>click</td><td>appends to the selected row — keyboard-only path, no drag required</td></tr>
+        <tr><td>categories</td><td>collapsed by default except Session + Context; counts always visible</td></tr>
+        <tr><td>icons</td><td>plain-Unicode stand-ins here; real Nerd Font glyphs in-app once the site font loads</td></tr>
+        <tr><td>touch</td><td>tap = click-to-append; long-press = drag. Rail becomes a bottom sheet under 900px</td></tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

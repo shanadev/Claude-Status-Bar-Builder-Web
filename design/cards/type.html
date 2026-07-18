@@ -1,0 +1,95 @@
+<!-- @dsCard group="Type" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: typography.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type — mono-only scale</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(255,46,166,.6), 0 0 20px rgba(255,46,166,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; }
+  .spec { border:1px solid var(--gib-line); border-radius:3px; background:var(--gib-bg); margin-bottom:10px; }
+  .spec .label { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
+    padding:8px 14px 0; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .spec .sample { padding:6px 14px 14px; }
+
+  .t-display { font-size:44px; line-height:1.05; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,255,102,.65), 0 0 26px rgba(0,255,102,.3); }
+  .t-h1 { font-size:26px; line-height:1.15; font-weight:700; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--gib-bright); }
+  .t-h2 { font-size:18px; line-height:1.25; font-weight:600; color:var(--gib-bright); }
+  .t-section { font-size:12px; line-height:1.3; font-weight:600; text-transform:uppercase;
+    letter-spacing:.22em; color:var(--gib-magenta); }
+  .t-body { font-size:14px; line-height:1.55; color:var(--gib-text); max-width:64ch; }
+  .t-small { font-size:12px; line-height:1.5; color:var(--gib-dim); }
+  .t-micro { font-size:10px; line-height:1.4; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint); }
+
+  .term { background:#000; border:1px solid var(--gib-line); border-radius:3px; padding:14px 16px;
+    font-size:14px; line-height:1.45; color:var(--gib-green); overflow-x:auto; white-space:pre; }
+  .term .p { color:var(--gib-cyan); } .term .dim { color:var(--gib-faint); }
+  .term .cursor { display:inline-block; width:.6em; height:1.1em; background:var(--gib-green);
+    vertical-align:text-bottom; animation:blink 1.1s steps(1) infinite;
+    box-shadow:0 0 8px rgba(0,255,102,.8); }
+  @keyframes blink { 50% { opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .term .cursor { animation:none; } }
+  .note { color:var(--gib-faint); font-size:11px; margin-top:20px; max-width:76ch; }
+</style>
+</head>
+<body>
+  <h1>Typography</h1>
+  <p class="sub">One family, everywhere: <b style="color:var(--gib-text)">CaskaydiaCove Nerd Font Mono</b>
+  (already served by the site for the terminal — the UI reuses it, so glyphs in copy match glyphs in
+  the preview). Fallbacks: Cascadia Code, Consolas, ui-monospace.</p>
+
+  <div class="spec"><div class="label"><span>display / 44 / 700 / caps / +8% tracking / green glow</span><span>hero, boot screen</span></div>
+    <div class="sample"><div class="t-display">Hack the Planet</div></div></div>
+
+  <div class="spec"><div class="label"><span>h1 / 26 / 700 / caps / +6% tracking</span><span>page titles</span></div>
+    <div class="sample"><div class="t-h1">Export your status line</div></div></div>
+
+  <div class="spec"><div class="label"><span>h2 / 18 / 600</span><span>panel titles, dialogs</span></div>
+    <div class="sample"><div class="t-h2">Segment styling</div></div></div>
+
+  <div class="spec"><div class="label"><span>section / 12 / 600 / caps / +22% tracking / magenta</span><span>group labels, nav</span></div>
+    <div class="sample"><div class="t-section">Element palette</div></div></div>
+
+  <div class="spec"><div class="label"><span>body / 14 / 400 / 1.55 / max 64ch</span><span>copy, docs, install steps</span></div>
+    <div class="sample"><div class="t-body">Drag elements onto the canvas, style each segment, and watch
+    the terminal render your status line live. When it looks right, jack out with an install
+    one-liner for your OS.</div></div></div>
+
+  <div class="spec"><div class="label"><span>small / 12 / 400 / dim</span><span>hints, captions, metadata</span></div>
+    <div class="sample"><div class="t-small">Renderer v1.1 · 36 elements · theme fits in the URL</div></div></div>
+
+  <div class="spec"><div class="label"><span>micro / 10 / caps / +18% tracking / faint</span><span>chips, table headers, badges</span></div>
+    <div class="sample"><div class="t-micro">cols 160 · utf-8 · truecolor</div></div></div>
+
+  <div class="spec"><div class="label"><span>terminal specimen / 14 / xterm.js</span><span>the hero surface</span></div>
+    <div class="sample"><div class="term"><span class="p">gibson:~$</span> statusbar --demo full-gibson
+<span class="dim"># model · cwd · git · context — powerline caps render in CaskaydiaCove</span>
+<span class="p">gibson:~$</span> <span class="cursor"></span></div></div></div>
+
+  <p class="note">// numerals are inherently tabular in mono — counters and cost readouts never jitter.
+  Bold (700) is reserved for display/h1 and inline emphasis in body; weight never substitutes for
+  color in semantic signals. Nerd Font glyphs (powerline caps, icons) appear only inside terminal
+  surfaces and the icon browser, never in UI copy.</p>
+</body>
+</html>

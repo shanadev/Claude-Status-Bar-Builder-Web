@@ -1,0 +1,106 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: segment canvas.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segment Canvas</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(255,46,166,.6), 0 0 20px rgba(255,46,166,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:74ch; }
+
+  .canvas { background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px; padding:18px; }
+  .rowlab { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
+    margin:0 0 8px 2px; display:flex; gap:10px; align-items:center; }
+  .rowlab .add { color:var(--gib-faint); border:1px dashed var(--gib-line); border-radius:2px;
+    padding:2px 8px; cursor:pointer; }
+  .rowlab .add:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
+
+  .pl { display:flex; align-items:stretch; flex-wrap:wrap; row-gap:14px; margin-bottom:18px; }
+  .seg { position:relative; display:flex; align-items:center; gap:7px; font-size:13px;
+    padding:8px 10px 8px 20px; color:#04060a; font-weight:600; cursor:pointer; margin-right:14px; }
+  .seg:first-child { padding-left:12px; border-radius:2px 0 0 2px; }
+  .seg .cap { position:absolute; left:100%; top:0; bottom:0; width:14px; z-index:2;
+    background:inherit; clip-path:polygon(0 0, 100% 50%, 0 100%); }
+  .seg .ico { opacity:.75; }
+  .seg:hover { filter:brightness(1.12); }
+  .seg.selected { outline:2px solid var(--gib-cyan); outline-offset:3px;
+    box-shadow:0 0 14px rgba(0,229,255,.45); z-index:3; }
+  .seg .del { position:absolute; top:-9px; right:-2px; z-index:4; width:16px; height:16px;
+    display:none; align-items:center; justify-content:center; font-size:10px; border-radius:50%;
+    background:var(--gib-red); color:#04060a; box-shadow:0 0 8px rgba(255,59,77,.6); }
+  .seg.selected .del { display:flex; }
+
+  .spacer { display:flex; align-items:center; padding:0 12px; color:var(--gib-faint);
+    font-size:10px; letter-spacing:.2em; border:1px dashed var(--gib-line); border-radius:2px;
+    margin-right:14px; }
+  .droptarget { width:3px; margin:-2px 12px -2px -2px; border-radius:2px; background:var(--gib-magenta);
+    box-shadow:0 0 10px rgba(255,46,166,.8); }
+  .ghost { display:flex; align-items:center; padding:8px 14px; color:var(--gib-faint); font-size:12px;
+    border:1px dashed var(--gib-line); border-radius:2px; cursor:pointer; }
+  .ghost:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
+
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:26px 0 12px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Segment canvas</h1>
+  <p class="sub">The build surface — segments render at UI scale with their real fg/bg colors and
+  powerline caps, so the canvas already looks like the status line it produces. Click selects and
+  opens the style panel; the terminal below stays the source of truth.</p>
+
+  <div class="canvas">
+    <div class="rowlab">row 1 <span class="add">+ element</span></div>
+    <div class="pl">
+      <div class="seg" style="background:var(--gib-claude);"><span class="ico">◆</span>Fable 5<span class="cap"></span></div>
+      <div class="seg selected" style="background:var(--gib-cyan);"><span class="ico">▸</span>~/gibson<span class="cap"></span><span class="del">×</span></div>
+      <div class="droptarget"></div>
+      <div class="seg" style="background:var(--gib-green);"><span class="ico">⎇</span>main +2 ~1<span class="cap"></span></div>
+      <div class="spacer">flex</div>
+      <div class="seg" style="background:var(--gib-violet);"><span class="ico">◔</span>62%<span class="cap"></span></div>
+      <div class="ghost">+ drop here</div>
+    </div>
+    <div class="rowlab">row 2 <span class="add">+ element</span></div>
+    <div class="pl" style="margin-bottom:2px;">
+      <div class="seg" style="background:var(--gib-amber);"><span class="ico">$</span>4.87<span class="cap"></span></div>
+      <div class="seg" style="background:var(--gib-surface); color:var(--gib-text);"><span class="ico">◷</span>78% 5hr (2pm)<span class="cap"></span></div>
+      <div class="ghost">+ drop here</div>
+    </div>
+  </div>
+
+  <h2>Behavior</h2>
+  <table>
+    <tr><td>select</td><td>cyan outline + glow, delete badge appears; Esc deselects, Del removes</td></tr>
+    <tr><td>reorder</td><td>drag within/between rows; magenta drop line marks the insertion point</td></tr>
+    <tr><td>caps</td><td>canvas caps are CSS clip-path stand-ins; the terminal renders the true NF glyph
+      (chevron / round / slant / flame per theme)</td></tr>
+    <tr><td>color chain</td><td>separator recolor (prev-bg → next-bg) is automatic; canvas mirrors it live</td></tr>
+    <tr><td>spacer</td><td>flex spacer renders as a dashed "flex" pill; pushes later segments right at
+      terminal cols, not canvas width</td></tr>
+    <tr><td>rows</td><td>"+ element" appends; new-row element in the palette adds row 3; empty rows collapse
+      to their label</td></tr>
+    <tr><td>keyboard</td><td>arrows move selection, alt+arrows reorder, enter opens style panel</td></tr>
+  </table>
+</body>
+</html>

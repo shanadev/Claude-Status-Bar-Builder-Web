@@ -1,0 +1,126 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<!--
+  Hack the Claude Status Bar — design system card: icon browser.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon Browser</title>
+<style>
+  :root {
+    --gib-void:#04060a; --gib-bg:#0a1016; --gib-surface:#0f1720; --gib-line:#1e2c3c;
+    --gib-green:#00ff66; --gib-cyan:#00e5ff; --gib-magenta:#ff2ea6; --gib-amber:#ffb300;
+    --gib-red:#ff3b4d; --gib-violet:#8b5cff; --gib-claude:#ff8a5c;
+    --gib-text:#d2e8da; --gib-bright:#f0fff7; --gib-dim:#7ba08e; --gib-faint:#4a6455;
+    --mono:"CaskaydiaCove NF","CaskaydiaCove Nerd Font Mono","Cascadia Code",Consolas,ui-monospace,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--gib-void); color:var(--gib-text); font:14px/1.5 var(--mono); padding:32px; }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+  h1 { font-size:22px; text-transform:uppercase; letter-spacing:.1em; color:var(--gib-bright);
+    text-shadow:0 0 6px rgba(0,229,255,.6), 0 0 20px rgba(0,229,255,.3); margin-bottom:4px; }
+  .sub { color:var(--gib-dim); font-size:13px; margin-bottom:24px; max-width:74ch; }
+  .wrap { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+
+  .modal { width:430px; background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px;
+    box-shadow:0 16px 60px rgba(0,0,0,.7), 0 0 24px rgba(0,229,255,.06); }
+  .m-head { padding:12px 14px; border-bottom:1px solid var(--gib-line); display:flex;
+    justify-content:space-between; align-items:center; }
+  .m-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.22em; color:var(--gib-magenta); }
+  .close { color:var(--gib-faint); cursor:pointer; } .close:hover { color:var(--gib-red); }
+  .m-search { margin:12px 14px 10px; display:flex; align-items:center; gap:8px;
+    background:var(--gib-surface); border:1px solid var(--gib-cyan); border-radius:2px;
+    padding:8px 10px; font-size:13px; color:var(--gib-text);
+    box-shadow:0 0 10px rgba(0,229,255,.25); }
+  .m-search .q { color:var(--gib-bright); }
+  .m-search .caret { display:inline-block; width:.55em; height:1.05em; background:var(--gib-cyan);
+    box-shadow:0 0 6px rgba(0,229,255,.7); animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  @media (prefers-reduced-motion:reduce) { .m-search .caret { animation:none; } }
+  .filters { display:flex; gap:6px; padding:0 14px 12px; flex-wrap:wrap; }
+  .f { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gib-dim);
+    border:1px solid var(--gib-line); border-radius:12px; padding:4px 11px; cursor:pointer; }
+  .f:hover { color:var(--gib-bright); border-color:var(--gib-cyan); }
+  .f.on { color:var(--gib-cyan); border-color:var(--gib-cyan); background:rgba(0,229,255,.08); }
+
+  .grid { display:grid; grid-template-columns:repeat(8, 1fr); gap:5px; padding:0 14px 12px; }
+  .cell { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:17px;
+    background:var(--gib-surface); border:1px solid var(--gib-line); border-radius:2px;
+    color:var(--gib-text); cursor:pointer; }
+  .cell:hover { border-color:var(--gib-cyan); color:var(--gib-bright);
+    box-shadow:0 0 8px rgba(0,229,255,.35); }
+  .cell.sel { border-color:var(--gib-green); color:var(--gib-green);
+    box-shadow:0 0 10px rgba(0,255,102,.45); }
+  .m-foot { border-top:1px solid var(--gib-line); padding:10px 14px; display:flex;
+    justify-content:space-between; align-items:center; font-size:11px; color:var(--gib-dim); }
+  .m-foot b { color:var(--gib-green); font-weight:400; }
+  .use { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#04060a;
+    background:var(--gib-green); border-radius:2px; padding:7px 14px; cursor:pointer; font-weight:700;
+    box-shadow:0 0 12px rgba(0,255,102,.4); }
+
+  .notes { flex:1; min-width:260px; }
+  .notes h2 { font-size:12px; text-transform:uppercase; letter-spacing:.2em; color:var(--gib-magenta);
+    border-bottom:1px solid var(--gib-line); padding-bottom:6px; margin:0 0 12px; }
+  .notes table { width:100%; border-collapse:collapse; font-size:12px; }
+  .notes td { padding:6px 8px; border-top:1px solid var(--gib-line); color:var(--gib-dim); vertical-align:top; }
+  .notes td:first-child { color:var(--gib-cyan); white-space:nowrap; }
+</style>
+</head>
+<body>
+  <h1>Icon browser</h1>
+  <p class="sub">Modal over the workspace, launched from the style panel. Search across the full
+  icons.json (Nerd Font glyphs + emoji + plain Unicode) with category filters. Emoji and Unicode
+  stand-ins below — in-app cells render true NF glyphs in CaskaydiaCove.</p>
+
+  <div class="wrap">
+    <div class="modal">
+      <div class="m-head"><span class="m-title">Icons</span><span class="close">✕</span></div>
+      <div class="m-search">/ <span class="q">fire</span><span class="caret"></span>
+        <span style="margin-left:auto; color:var(--gib-faint); font-size:10px;">24 hits</span></div>
+      <div class="filters">
+        <span class="f on">all</span><span class="f">nerd font</span><span class="f">emoji</span>
+        <span class="f">unicode</span><span class="f on">dev</span><span class="f">arrows</span>
+        <span class="f">shapes</span><span class="f">weather</span>
+      </div>
+      <div class="grid">
+        <span class="cell">🔥</span><span class="cell sel">🚀</span><span class="cell">⚡</span>
+        <span class="cell">✨</span><span class="cell">🐙</span><span class="cell">🌿</span>
+        <span class="cell">💰</span><span class="cell">🧠</span>
+        <span class="cell">⎇</span><span class="cell">λ</span><span class="cell">⌘</span>
+        <span class="cell">⚙</span><span class="cell">◆</span><span class="cell">●</span>
+        <span class="cell">▲</span><span class="cell">★</span>
+        <span class="cell">♥</span><span class="cell">◔</span><span class="cell">☰</span>
+        <span class="cell">⏻</span><span class="cell">⏱</span><span class="cell">✎</span>
+        <span class="cell">☁</span><span class="cell">⚑</span>
+      </div>
+      <div class="m-foot">
+        <span>🚀 <b>rocket</b> · emoji · U+1F680</span>
+        <span class="use">Use icon</span>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Behavior</h2>
+      <table>
+        <tr><td>data</td><td>icons.json fetched lazily on first open (nerd-fonts glyphnames + emoji-test
+          + CLDR annotations; skin tones excluded); grid is virtualized — thousands of cells stay smooth</td></tr>
+        <tr><td>search</td><td>matches glyph name, NF prefix (nf-md-, nf-fa-…), CLDR keywords; "/" focuses,
+          arrows navigate the grid, enter = use</td></tr>
+        <tr><td>select</td><td>single click selects (green ring) and fills the footer detail row;
+          double-click or "Use icon" commits and closes</td></tr>
+        <tr><td>fallback note</td><td>choosing an NF glyph surfaces a one-line hint: "needs a Nerd Font
+          in your terminal" — amber, dismissible, remembered</td></tr>
+        <tr><td>recent</td><td>a "recent" filter chip appears once anything has been used; last 24, stored
+          with the theme</td></tr>
+        <tr><td>dismiss</td><td>Esc or ✕ closes without committing; backdrop is var(--gib-void) at 75%
+          with no blur (cheap on WASM)</td></tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
