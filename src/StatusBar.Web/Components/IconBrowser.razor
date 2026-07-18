@@ -1,0 +1,186 @@
+@* Hack the Claude Status Bar — icon browser: search + virtualized grid over icons.json.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@inject IconCatalog Catalog
+@inject IJSRuntime JS
+
+@if (_visible)
+{
+    <div class="backdrop" @onclick="Close" @onkeydown="OnKey">
+        <div class="modal" @onclick:stopPropagation>
+            <div class="m-head">
+                <span class="m-title">Icons</span>
+                <button type="button" class="m-close" @onclick="Close">&#10005;</button>
+            </div>
+            <div class="m-search">
+                <span>/</span>
+                <input type="text" placeholder="search icons" value="@_search" @ref="_searchBox"
+                       @oninput="OnSearchInput" />
+                <span class="hits">@(_loading ? "loading…" : $"{Filtered.Count} hits")</span>
+            </div>
+            <div class="filters">
+                <button type="button" class="fchip @(_filter == "all" ? "on" : null)" @onclick="@(() => SetFilter("all"))">all</button>
+                <button type="button" class="fchip @(_filter == "nf" ? "on" : null)" @onclick="@(() => SetFilter("nf"))">nerd font</button>
+                <button type="button" class="fchip @(_filter == "emoji" ? "on" : null)" @onclick="@(() => SetFilter("emoji"))">emoji</button>
+                @if (_recents.Count > 0)
+                {
+                    <button type="button" class="fchip @(_filter == "recent" ? "on" : null)" @onclick="@(() => SetFilter("recent"))">recent</button>
+                }
+            </div>
+            @if (_selected is { IsNerdFont: true } && !_nfHintDismissed)
+            {
+                <div class="nfhint">
+                    <span>needs a Nerd Font in your terminal &#8212; emoji work everywhere</span>
+                    <button type="button" @onclick="DismissNfHint">&#10005;</button>
+                </div>
+            }
+            <div class="icongrid">
+                @if (_loading)
+                {
+                    <p class="t-small" style="padding:20px 0;">jacking into the icon grid<span class="caret"></span></p>
+                }
+                else
+                {
+                    <Virtualize Items="Rows" ItemSize="55" Context="iconRow">
+                        <div class="grow">
+                            @foreach (var entry in iconRow)
+                            {
+                                var localEntry = entry;
+                                <button type="button" class="cell @(_selected == localEntry ? "sel" : null)"
+                                        title="@localEntry.Name"
+                                        @onclick="() => _selected = localEntry"
+                                        @ondblclick="() => PickAsync(localEntry)">@localEntry.Char</button>
+                            }
+                        </div>
+                    </Virtualize>
+                }
+            </div>
+            <div class="m-foot">
+                @if (_selected is IconEntry sel)
+                {
+                    <span class="det">@sel.Char <b>@sel.Name</b> &#183; @(sel.IsNerdFont ? "nerd font" : sel.IsEmoji ? "emoji" : "unicode") &#183; @Codepoint(sel)</span>
+                    <button type="button" class="use" @onclick="() => PickAsync(sel)">Use icon</button>
+                }
+                else
+                {
+                    <span class="det t-small">click an icon to inspect &#183; double-click to use it</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    bool _visible, _loading, _nfHintDismissed;
+    string _search = "";
+    string _filter = "all";
+    IconEntry? _selected;
+    List<string> _recents = new();
+    List<IconEntry> _filtered = new();
+    ElementReference _searchBox;
+    bool _focusPending;
+
+    List<IconEntry> Filtered => _filtered;
+
+    List<IconEntry[]> Rows
+    {
+        get
+        {
+            var rows = new List<IconEntry[]>((_filtered.Count + 7) / 8);
+            for (int i = 0; i < _filtered.Count; i += 8)
+                rows.Add(_filtered.Skip(i).Take(8).ToArray());
+            return rows;
+        }
+    }
+
+    public async Task OpenAsync()
+    {
+        _visible = true;
+        _selected = null;
+        _focusPending = true;
+        _nfHintDismissed = await JS.InvokeAsync<string?>("sbGet", "sbb-nfhint") == "1";
+        var recentsJson = await JS.InvokeAsync<string?>("sbGet", "sbb-recent-icons");
+        _recents = string.IsNullOrEmpty(recentsJson)
+            ? new List<string>()
+            : (System.Text.Json.JsonSerializer.Deserialize<List<string>>(recentsJson) ?? new List<string>());
+
+        if (Catalog.Icons is null)
+        {
+            _loading = true;
+            StateHasChanged();
+            await Catalog.EnsureLoadedAsync();
+            _loading = false;
+        }
+        Refilter();
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_visible && _focusPending && !_loading)
+        {
+            _focusPending = false;
+            try { await _searchBox.FocusAsync(); } catch { /* not rendered yet */ }
+        }
+    }
+
+    void Close()
+    {
+        _visible = false;
+        StateHasChanged();
+    }
+
+    void OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") Close();
+        else if (e.Key == "Enter" && _selected is IconEntry sel) _ = PickAsync(sel);
+    }
+
+    void OnSearchInput(ChangeEventArgs e) { _search = e.Value?.ToString() ?? ""; Refilter(); }
+    void SetFilter(string value) { _filter = value; Refilter(); }
+
+    void Refilter()
+    {
+        var icons = Catalog.Icons ?? (IReadOnlyList<IconEntry>)Array.Empty<IconEntry>();
+        IEnumerable<IconEntry> set = _filter switch
+        {
+            "nf" => icons.Where(i => i.IsNerdFont),
+            "emoji" => icons.Where(i => i.IsEmoji),
+            "recent" => _recents.Select(c => icons.FirstOrDefault(i => i.Char == c)).OfType<IconEntry>(),
+            _ => icons,
+        };
+        if (_search.Length > 0)
+        {
+            set = set.Where(i =>
+                i.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || i.Keywords.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || i.Group.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        }
+        _filtered = set.ToList();
+    }
+
+    async Task PickAsync(IconEntry entry)
+    {
+        if (State.Selected is Segment seg && seg.Element != ElementKind.Spacer)
+        {
+            seg.Icon = entry.Char;
+            State.Notify();
+        }
+        _recents.Remove(entry.Char);
+        _recents.Insert(0, entry.Char);
+        if (_recents.Count > 24) _recents.RemoveRange(24, _recents.Count - 24);
+        await JS.InvokeVoidAsync("sbSet", "sbb-recent-icons",
+            System.Text.Json.JsonSerializer.Serialize(_recents));
+        Close();
+    }
+
+    async Task DismissNfHint()
+    {
+        _nfHintDismissed = true;
+        await JS.InvokeVoidAsync("sbSet", "sbb-nfhint", "1");
+    }
+
+    static string Codepoint(IconEntry entry) =>
+        entry.Char.Length == 0 ? "" : "U+" + char.ConvertToUtf32(entry.Char, 0).ToString("X4");
+}

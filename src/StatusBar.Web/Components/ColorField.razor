@@ -1,0 +1,55 @@
+@* Hack the Claude Status Bar — color field: theme swatches + truecolor picker + hex paste.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+
+<div class="swrow">
+    <span class="k">@Label</span>
+    @if (AllowNone)
+    {
+        <button type="button" class="sw none @(Value is null ? "on" : null)" title="none / terminal default"
+                @onclick="() => Set(null)"></button>
+    }
+    @foreach (var hex in ThemeSwatches)
+    {
+        var localHex = hex;
+        <button type="button" class="sw @(IsOn(localHex) ? "on" : null)" style="background:@localHex"
+                title="@localHex" @onclick="() => Set(localHex)"></button>
+    }
+    <span class="hexfield">
+        <input type="color" value="@(Ansi.ToHex(Value) ?? "#808080")"
+               @onchange="e => Set(e.Value?.ToString())" title="pick any color" />
+        <input type="text" value="@(Value ?? "")" placeholder="#rrggbb" spellcheck="false"
+               @onchange="e => SetHexText(e.Value?.ToString())" />
+    </span>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public bool AllowNone { get; set; } = true;
+
+    // First row of swatches = the palette this theme already uses (style-panel card).
+    IEnumerable<string> ThemeSwatches =>
+        State.Theme.Rows.SelectMany(r => r.Segments)
+            .SelectMany(s => new[] { s.Bg, s.Fg })
+            .Select(Ansi.ToHex)
+            .OfType<string>()
+            .Distinct()
+            .Take(8);
+
+    bool IsOn(string hex) => string.Equals(Ansi.ToHex(Value), hex, StringComparison.OrdinalIgnoreCase);
+
+    Task Set(string? value) => ValueChanged.InvokeAsync(value);
+
+    Task SetHexText(string? raw)
+    {
+        raw = raw?.Trim();
+        if (string.IsNullOrEmpty(raw) || raw is "none") return Set(null);
+        if (raw.StartsWith("ansi:", StringComparison.OrdinalIgnoreCase)) return Set(raw.ToLowerInvariant());
+        if (!raw.StartsWith('#')) raw = "#" + raw;
+        if (Ansi.TryParseHex(raw, out _, out _, out _)) return Set(raw.ToLowerInvariant());
+        return Task.CompletedTask; // not a color — leave the value alone
+    }
+}

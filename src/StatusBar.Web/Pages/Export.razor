@@ -1,0 +1,131 @@
+@* Hack the Claude Status Bar — export screen ("Jack out"): the link IS the save format;
+   three install flows below it, most-automated first.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@page "/export"
+@inject BuilderState State
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ToastService Toasts
+@implements IDisposable
+
+<PageTitle>Jack out — Hack the Claude Status Bar</PageTitle>
+
+<div class="export">
+    <h1>Jack out</h1>
+    <p class="sub">Your theme travels in the link &#8212; no accounts, no backend. Share it,
+        bookmark it, or install it below. <a href="build">&#8592; back to the builder</a></p>
+
+    <div class="sheet">
+        <div class="linkrow">
+            <span class="linkbox">@ThemeLink</span>
+            <button type="button" class="copybtn" @onclick="CopyLink">Copy link</button>
+        </div>
+
+        <div class="tabs">
+            <button type="button" class="tab @(_tab == "oneliner" ? "on" : null)" @onclick="@(() => _tab = "oneliner")">One-liner</button>
+            <button type="button" class="tab @(_tab == "claude" ? "on" : null)" @onclick="@(() => _tab = "claude")">Claude Code</button>
+            <button type="button" class="tab @(_tab == "manual" ? "on" : null)" @onclick="@(() => _tab = "manual")">Manual</button>
+        </div>
+
+        <div class="pane">
+            @if (_tab != "claude")
+            {
+                <div class="ostabs">
+                    @foreach (var os in new[] { "windows", "macos", "linux" })
+                    {
+                        var localOs = os;
+                        <button type="button" class="fchip @(_os == localOs ? "on" : null)"
+                                @onclick="() => _os = localOs">@localOs</button>
+                    }
+                </div>
+            }
+
+            @if (_tab == "oneliner")
+            {
+                <div class="codeblock"><button type="button" class="copy2" @onclick="@(() => Copy(OneLiner, "crash and burn"))">copy</button><span class="c"># drops the renderer + theme in ~/.claude/statusbar, patches settings.json (backup first)</span>
+@OneLiner</div>
+                <div class="hint"><b>What it does:</b> downloads the renderer for your OS, writes
+                theme.json, backs up settings.json, adds the statusLine block. Nothing else touched.
+                The whole script is readable at <a href="@(Nav.BaseUri + ScriptName)" target="_blank" rel="noopener">/@ScriptName</a> before you run it.</div>
+            }
+            else if (_tab == "claude")
+            {
+                <div class="codeblock"><button type="button" class="copy2" @onclick="@(() => Copy(ClaudePrompt, "talk nerdy to it"))">copy</button>@ClaudePrompt</div>
+                <div class="hint"><b>How it works:</b> paste that into Claude Code &#8212; Claude fetches
+                the install guide and performs the whole setup itself, asking before it touches
+                settings.json. The canonical INSTALL.md lives in the repo.</div>
+            }
+            else
+            {
+                <div class="dlrow">
+                    <a class="btn ghost" href="@RendererUrl" target="_blank" rel="noopener">renderer (@_os)</a>
+                    <button type="button" class="btn ghost" @onclick="DownloadTheme">theme.json</button>
+                </div>
+                <div class="codeblock"><button type="button" class="copy2" @onclick="@(() => Copy(SettingsSnippet, "mess with the best"))">copy</button><span class="c"># merge into ~/.claude/settings.json</span>
+@SettingsSnippet</div>
+                <div class="hint"><b>Steps:</b> drop the renderer and theme.json in
+                <b>~/.claude/statusbar/</b>, then merge the snippet into settings.json. Renderer
+                binaries publish with the first release &#8212; until then, build from source
+                (<a href="https://github.com/shanadev/Claude-Status-Bar-Builder-Web" target="_blank" rel="noopener">repo</a>:
+                dotnet publish src/StatusBar.Renderer).</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    string _tab = "oneliner";
+    string _os = "windows";
+
+    const string RepoUrl = "https://github.com/shanadev/Claude-Status-Bar-Builder-Web";
+
+    string ThemeLink => Nav.BaseUri + "#t=" + ThemeCodec.Encode(State.Theme);
+
+    string ScriptName => _os == "windows" ? "install.ps1" : "install.sh";
+
+    string RendererUrl => RepoUrl + "/releases/latest/download/" + _os switch
+    {
+        "windows" => "StatusBar.Renderer-win-x64.exe",
+        "macos" => "StatusBar.Renderer-osx-arm64",
+        _ => "StatusBar.Renderer-linux-x64",
+    };
+
+    string OneLiner => _os == "windows"
+        ? $"$env:SBB_THEME='{ThemeCodec.ToBase64Json(State.Theme)}'; irm {Nav.BaseUri}install.ps1 | iex"
+        : $"SBB_THEME='{ThemeCodec.ToBase64Json(State.Theme)}' bash -c \"$(curl -fsSL {Nav.BaseUri}install.sh)\"";
+
+    string ClaudePrompt =>
+        $"Install this Claude Code status line theme: {ThemeLink}\n" +
+        $"Follow the install guide at {RepoUrl}/blob/main/INSTALL.md — the theme JSON is " +
+        "embedded in the link after #t= (version-prefixed base64url raw-deflate, see the guide). " +
+        "Ask me before changing settings.json.";
+
+    string SettingsSnippet => _os == "windows"
+        ? "{\n  \"statusLine\": {\n    \"type\": \"command\",\n    \"command\": \"%USERPROFILE%\\\\.claude\\\\statusbar\\\\renderer.exe %USERPROFILE%\\\\.claude\\\\statusbar\\\\theme.json\"\n  }\n}"
+        : "{\n  \"statusLine\": {\n    \"type\": \"command\",\n    \"command\": \"~/.claude/statusbar/renderer ~/.claude/statusbar/theme.json\"\n  }\n}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += StateHasChanged;
+        await State.InitializeAsync(Nav);
+        _os = await JS.InvokeAsync<string>("sbPlatform");
+    }
+
+    async Task CopyLink() => await Copy(ThemeLink, "mess with the best", "LINK COPIED");
+
+    async Task Copy(string text, string flavor, string title = "COPIED")
+    {
+        var ok = await JS.InvokeAsync<bool>("sbCopy", text);
+        if (ok) Toasts.Show("✓ " + title, flavor);
+        else Toasts.Show("copy failed — select the text and copy manually", error: true);
+    }
+
+    async Task DownloadTheme()
+    {
+        await JS.InvokeVoidAsync("sbDownload", "theme.json", State.Theme.ToJson(), "application/json");
+        Toasts.Show("✓ THEME.JSON SAVED", "zero cool approves");
+    }
+
+    public void Dispose() => State.Changed -= StateHasChanged;
+}

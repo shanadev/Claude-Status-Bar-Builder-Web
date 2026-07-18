@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hack the Claude Status Bar - horizontal lockup (mark + wordmark + tagline).
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 120" role="img" aria-label="Hack the Claude Status Bar">
+  <g transform="translate(10,8)">
+    <polygon points="0,0 81.6,52 0,104" fill="#00ff66"/>
+    <polygon points="26.4,0 90.1,52 26.4,104" fill="#00e5ff"/>
+    <polygon points="52.8,0 98.5,52 52.8,104" fill="#ff8a5c"/>
+  </g>
+  <g font-family="'CaskaydiaCove NFM','Cascadia Code',Consolas,monospace" font-weight="700"
+     letter-spacing="2.5" text-transform="uppercase">
+    <text x="140" y="52" font-size="30" fill="#f0fff7">HACK THE <tspan fill="#ff8a5c">CLAUDE</tspan></text>
+    <text x="140" y="88" font-size="30" fill="#f0fff7">STATUS BAR</text>
+    <text x="141" y="110" font-size="12" fill="#7ba08e" font-weight="400" letter-spacing="4">// BUILD &#183; PREVIEW &#183; JACK OUT</text>
+  </g>
+</svg>

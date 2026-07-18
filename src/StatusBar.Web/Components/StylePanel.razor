@@ -1,0 +1,358 @@
+@* Hack the Claude Status Bar — style panel: right-rail inspector. Everything writes straight
+   into the theme and re-renders the terminal — no apply button, ever.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@implements IDisposable
+
+<div class="panel">
+@if (State.Selected is Segment seg && State.SelectedRow is Row row)
+{
+    var def = ElementRegistry.Get(seg.Element);
+    <div class="panel-head">
+        <span class="panel-title">Style</span>
+        <span class="p-elem">@def.Name</span>
+    </div>
+
+    @if (seg.Element == ElementKind.Spacer)
+    {
+        <div class="sect">
+            <div class="s-lab"><span>spacer width</span></div>
+            <div class="selrow">
+                <span class="k">width</span>
+                <input type="text" value="@(seg.Text ?? "flex")" spellcheck="false"
+                       @onchange="e => { seg.Text = e.Value?.ToString(); State.Notify(); }" />
+            </div>
+            <p class="t-small" style="margin-top:8px;">a number of spaces, or <b>flex</b> to push
+            everything after it to the right edge of the terminal</p>
+        </div>
+    }
+    else
+    {
+        @if (seg.Element == ElementKind.Text)
+        {
+            <div class="sect">
+                <div class="s-lab"><span>text</span></div>
+                <div class="selrow">
+                    <input type="text" class="wide" value="@(seg.Text ?? "")" spellcheck="false"
+                           @onchange="e => { seg.Text = e.Value?.ToString(); State.Notify(); }" />
+                </div>
+            </div>
+        }
+
+        <div class="sect">
+            <div class="s-lab"><span>colors</span>
+                <button type="button" class="reset" title="reset colors"
+                        @onclick="() => { seg.Fg = seg.Bg = seg.IconFg = seg.LabelFg = seg.ValueFg = null; State.Notify(); }">&#8634;</button>
+            </div>
+            <div class="segctl">
+                @foreach (var part in Enum.GetValues<Part>())
+                {
+                    var localPart = part;
+                    <button type="button" class="@(_part == localPart ? "on" : null)"
+                            @onclick="() => _part = localPart">@localPart.ToString().ToLowerInvariant()</button>
+                }
+            </div>
+            @if (_part == Part.All)
+            {
+                <ColorField Label="fg" Value="@seg.Fg" ValueChanged="v => { seg.Fg = v; State.Notify(); }" />
+                <ColorField Label="bg" Value="@seg.Bg" ValueChanged="v => { seg.Bg = v; State.Notify(); }" />
+            }
+            else
+            {
+                <ColorField Label="fg" Value="@PartFg(seg)" ValueChanged="v => { SetPartFg(seg, v); State.Notify(); }" />
+                <p class="t-small">overrides the segment fg for the @_part.ToString().ToLowerInvariant() only</p>
+            }
+        </div>
+
+        <div class="sect">
+            <div class="s-lab"><span>text style</span></div>
+            <div class="attrs">
+                <button type="button" class="attr @(seg.Bold ? "on" : null)" style="font-weight:700"
+                        @onclick="() => { seg.Bold = !seg.Bold; State.Notify(); }">B</button>
+                <button type="button" class="attr @(seg.Dim ? "on" : null)" style="opacity:.7"
+                        @onclick="() => { seg.Dim = !seg.Dim; State.Notify(); }">D</button>
+                <button type="button" class="attr @(seg.Italic ? "on" : null)" style="font-style:italic"
+                        @onclick="() => { seg.Italic = !seg.Italic; State.Notify(); }">I</button>
+                <button type="button" class="attr @(seg.Underline ? "on" : null)" style="text-decoration:underline"
+                        @onclick="() => { seg.Underline = !seg.Underline; State.Notify(); }">U</button>
+            </div>
+        </div>
+
+        <div class="sect">
+            <div class="s-lab"><span>icon</span>
+                <button type="button" class="reset" title="reset to element default"
+                        @onclick="() => { seg.Icon = null; State.Notify(); }">&#8634;</button>
+            </div>
+            <div class="iconrow">
+                <span class="icochip">@(EffectiveIcon(seg, def) is { Length: > 0 } ic ? ic : "—")</span>
+                <span class="iconname">@(seg.Icon is null ? "element default" : seg.Icon.Length == 0 ? "hidden" : "custom")</span>
+                <button type="button" class="browse" @onclick="OnBrowseIcon">Browse</button>
+            </div>
+            <div class="selrow" style="margin-top:8px; margin-bottom:0;">
+                <span class="k">show icon</span>
+                <button type="button" class="toggle @(seg.Icon != "" ? "on" : null)"
+                        @onclick="() => ToggleIconVisible(seg)">
+                    <span class="tk"></span>@(seg.Icon != "" ? "shown" : "hidden")
+                </button>
+            </div>
+        </div>
+
+        <div class="sect">
+            <div class="s-lab"><span>label</span>
+                <button type="button" class="reset" title="reset to element default"
+                        @onclick="() => { seg.Label = null; State.Notify(); }">&#8634;</button>
+            </div>
+            <div class="selrow">
+                <span class="k">show label</span>
+                <button type="button" class="toggle @(seg.Label != "" ? "on" : null)"
+                        @onclick="() => ToggleLabelVisible(seg)">
+                    <span class="tk"></span>@(seg.Label != "" ? "shown" : "hidden")
+                </button>
+            </div>
+            @if (seg.Label != "")
+            {
+                <div class="selrow" style="margin-bottom:0;">
+                    <span class="k">text</span>
+                    <input type="text" value="@(seg.Label ?? "")" placeholder="@(def.DefaultLabel.Length > 0 ? def.DefaultLabel : "element default")"
+                           spellcheck="false"
+                           @onchange="e => { var v = e.Value?.ToString(); seg.Label = string.IsNullOrEmpty(v) ? null : v; State.Notify(); }" />
+                </div>
+            }
+        </div>
+
+        @if (def.Formats is not null || def.Options is not null)
+        {
+            <div class="sect">
+                <div class="s-lab"><span>format</span></div>
+                @if (def.Formats is not null)
+                {
+                    <div class="selrow">
+                        <span class="k">value</span>
+                        <select value="@(seg.Format ?? def.Formats[0].Key)"
+                                @onchange="e => { var v = e.Value?.ToString(); seg.Format = v == def.Formats[0].Key ? null : v; State.Notify(); }">
+                            @foreach (var (key, display) in def.Formats)
+                            {
+                                <option value="@key">@display</option>
+                            }
+                        </select>
+                    </div>
+                }
+                @if (def.Options is not null)
+                {
+                    <div class="selrow">
+                        <span class="k">extra</span>
+                        <select value="@(seg.Option ?? def.Options[0].Key)"
+                                @onchange="e => { var v = e.Value?.ToString(); seg.Option = v == def.Options[0].Key ? null : v; State.Notify(); }">
+                            @foreach (var (key, display) in def.Options)
+                            {
+                                <option value="@key">@display</option>
+                            }
+                        </select>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (def.SupportsBar)
+        {
+            <div class="sect">
+                <div class="s-lab"><span>progress bar</span></div>
+                <div class="selrow">
+                    <span class="k">bar</span>
+                    <button type="button" class="toggle @(seg.Bar is not null ? "on" : null)"
+                            @onclick="() => { seg.Bar = seg.Bar is null ? new BarOptions() : null; State.Notify(); }">
+                        <span class="tk"></span>@(seg.Bar is not null ? "on" : "off")
+                    </button>
+                </div>
+                @if (seg.Bar is BarOptions bar)
+                {
+                    <div class="selrow">
+                        <span class="k">width</span>
+                        <input type="number" min="2" max="60" value="@bar.Width"
+                               @onchange="e => { if (int.TryParse(e.Value?.ToString(), out var n)) bar.Width = Math.Clamp(n, 2, 60); State.Notify(); }" />
+                    </div>
+                    <div class="selrow">
+                        <span class="k">smooth</span>
+                        <button type="button" class="toggle @(bar.Smooth ? "on" : null)"
+                                @onclick="() => { bar.Smooth = !bar.Smooth; State.Notify(); }">
+                            <span class="tk"></span>&#8539;-block fill
+                        </button>
+                    </div>
+                    <div class="selrow">
+                        <span class="k">chars</span>
+                        <input type="text" style="max-width:44px" maxlength="2" value="@bar.FilledChar" title="filled char"
+                               @onchange="e => { var v = e.Value?.ToString(); if (!string.IsNullOrEmpty(v)) bar.FilledChar = v; State.Notify(); }" />
+                        <input type="text" style="max-width:44px" maxlength="2" value="@bar.EmptyChar" title="empty char"
+                               @onchange="e => { var v = e.Value?.ToString(); if (!string.IsNullOrEmpty(v)) bar.EmptyChar = v; State.Notify(); }" />
+                    </div>
+                    <div class="selrow">
+                        <span class="k">brackets</span>
+                        <input type="text" style="max-width:56px" maxlength="2" placeholder="[]" value="@(bar.Brackets ?? "")"
+                               @onchange="e => { var v = e.Value?.ToString(); bar.Brackets = string.IsNullOrEmpty(v) ? null : v; State.Notify(); }" />
+                    </div>
+                    <ColorField Label="fill" Value="@bar.FilledFg" ValueChanged="v => { bar.FilledFg = v; State.Notify(); }" />
+                    <ColorField Label="empty" Value="@bar.EmptyFg" ValueChanged="v => { bar.EmptyFg = v; State.Notify(); }" />
+                    <ColorField Label="grad a" Value="@bar.GradientFrom" ValueChanged="v => { bar.GradientFrom = v; State.Notify(); }" />
+                    <ColorField Label="grad b" Value="@bar.GradientTo" ValueChanged="v => { bar.GradientTo = v; State.Notify(); }" />
+                }
+            </div>
+        }
+
+        @if (def.SupportsThresholds)
+        {
+            <div class="sect">
+                <div class="s-lab"><span>thresholds</span></div>
+                @foreach (var rule in seg.Thresholds)
+                {
+                    var localRule = rule;
+                    <div class="threshrow">
+                        <span class="t-small">&#8805;</span>
+                        <input type="number" min="0" max="100" value="@localRule.AtOrAbove"
+                               @onchange="e => { if (double.TryParse(e.Value?.ToString(), out var d)) localRule.AtOrAbove = d; State.Notify(); }" />
+                        <span class="t-small">%</span>
+                        <button type="button" class="x" title="remove stop"
+                                @onclick="() => { seg.Thresholds.Remove(localRule); State.Notify(); }">&#215;</button>
+                    </div>
+                    <ColorField Label="fg" Value="@localRule.Fg" ValueChanged="v => { localRule.Fg = v; State.Notify(); }" />
+                    <ColorField Label="bg" Value="@localRule.Bg" ValueChanged="v => { localRule.Bg = v; State.Notify(); }" />
+                }
+                <button type="button" class="addlink" @onclick="() => AddStop(seg)">+ add stop</button>
+            </div>
+        }
+
+        <div class="sect">
+            <button type="button" class="toggle @(seg.HideWhenMissing ? "on" : null)"
+                    @onclick="() => { seg.HideWhenMissing = !seg.HideWhenMissing; State.Notify(); }">
+                <span class="tk"></span>hide when zero / absent
+            </button>
+        </div>
+    }
+}
+else
+{
+    var targetRow = State.TargetRow;
+    int rowNum = State.Theme.Rows.IndexOf(targetRow) + 1;
+    <div class="panel-head">
+        <span class="panel-title">Theme</span>
+        <span class="p-elem">no segment selected</span>
+    </div>
+
+    <div class="sect">
+        <div class="s-lab"><span>row @rowNum — separators</span></div>
+        <div class="selrow">
+            <span class="k">style</span>
+            <select value="@targetRow.Separator"
+                    @onchange="e => { targetRow.Separator = Enum.Parse<SeparatorStyle>(e.Value!.ToString()!); State.Notify(); }">
+                @foreach (var s in Enum.GetValues<SeparatorStyle>())
+                {
+                    <option value="@s">@SepName(s)</option>
+                }
+            </select>
+        </div>
+        <div class="selrow">
+            <span class="k">end caps</span>
+            <select value="@targetRow.Caps"
+                    @onchange="e => { targetRow.Caps = Enum.Parse<CapStyle>(e.Value!.ToString()!); State.Notify(); }">
+                @foreach (var c in Enum.GetValues<CapStyle>())
+                {
+                    <option value="@c">@c.ToString().ToLowerInvariant()</option>
+                }
+            </select>
+        </div>
+        @if (targetRow.Separator is SeparatorStyle.Pipe or SeparatorStyle.Dot or SeparatorStyle.ChevronLine)
+        {
+            <ColorField Label="sep" Value="@targetRow.SeparatorFg" ValueChanged="v => { targetRow.SeparatorFg = v; State.Notify(); }" />
+        }
+    </div>
+
+    <div class="sect">
+        <div class="s-lab"><span>theme</span></div>
+        <div class="selrow">
+            <span class="k">name</span>
+            <input type="text" value="@State.Theme.Name" spellcheck="false"
+                   @onchange="SetThemeName" />
+        </div>
+        <ColorField Label="term bg" Value="@State.Theme.Background" AllowNone="false"
+                    ValueChanged="SetThemeBackground" />
+    </div>
+
+    <div class="sect">
+        <p class="t-small">select a segment on the canvas to style it &#8212; colors, icon, label,
+        format, bars and thresholds all live-update the terminal below</p>
+    </div>
+}
+</div>
+
+@code {
+    enum Part { All, Icon, Label, Value }
+    Part _part = Part.All;
+
+    [Parameter] public EventCallback OnBrowseIcon { get; set; }
+
+    protected override void OnInitialized() => State.Changed += StateHasChanged;
+    public void Dispose() => State.Changed -= StateHasChanged;
+
+    string? PartFg(Segment seg) => _part switch
+    {
+        Part.Icon => seg.IconFg,
+        Part.Label => seg.LabelFg,
+        Part.Value => seg.ValueFg,
+        _ => seg.Fg,
+    };
+
+    void SetPartFg(Segment seg, string? v)
+    {
+        switch (_part)
+        {
+            case Part.Icon: seg.IconFg = v; break;
+            case Part.Label: seg.LabelFg = v; break;
+            case Part.Value: seg.ValueFg = v; break;
+            default: seg.Fg = v; break;
+        }
+    }
+
+    static string EffectiveIcon(Segment seg, ElementDef def) => seg.Icon ?? def.DefaultIcon;
+
+    void ToggleIconVisible(Segment seg)
+    {
+        seg.Icon = seg.Icon == "" ? null : "";
+        State.Notify();
+    }
+
+    void ToggleLabelVisible(Segment seg)
+    {
+        seg.Label = seg.Label == "" ? null : "";
+        State.Notify();
+    }
+
+    void AddStop(Segment seg)
+    {
+        seg.Thresholds.Add(new ThresholdRule { AtOrAbove = 70, Fg = "#ffb300" });
+        State.Notify();
+    }
+
+    void SetThemeName(ChangeEventArgs e)
+    {
+        State.Theme.Name = e.Value?.ToString() ?? "";
+        State.Notify();
+    }
+
+    void SetThemeBackground(string? v)
+    {
+        State.Theme.Background = v ?? "#101014";
+        State.Notify();
+    }
+
+    static string SepName(SeparatorStyle s) => s switch
+    {
+        SeparatorStyle.ChevronLine => "chevron line ›",
+        SeparatorStyle.Chevron => "chevron (solid)",
+        SeparatorStyle.Round => "round (solid)",
+        SeparatorStyle.Slant => "slant (solid)",
+        SeparatorStyle.Backslant => "backslant (solid)",
+        SeparatorStyle.Flame => "flame (solid)",
+        SeparatorStyle.Blocks => "blocks (solid)",
+        _ => s.ToString().ToLowerInvariant(),
+    };
+}

@@ -1,0 +1,104 @@
+@* Hack the Claude Status Bar — element palette (left rail): all elements, search, drag source.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@implements IDisposable
+
+<div class="panel">
+    <div class="panel-head">
+        <span class="panel-title">Elements</span>
+        <span class="t-micro">@ElementRegistry.All.Count</span>
+    </div>
+    <div class="rail-search">
+        <span>/</span>
+        <input id="palette-search" type="text" placeholder="search elements"
+               @bind="_search" @bind:event="oninput" />
+        @if (_search.Length > 0)
+        {
+            <span class="n">@Filtered.Count()</span>
+        }
+    </div>
+
+    @foreach (var group in Groups)
+    {
+        var inGroup = Filtered.Where(d => d.Group == group).ToList();
+        if (_search.Length > 0 && inGroup.Count == 0) { continue; }
+        bool open = _search.Length > 0 || _expanded.Contains(group);
+        <div class="cat">
+            <button type="button" class="cat-head" @onclick="() => Toggle(group)">
+                <span>@group</span>
+                <span class="n">@ElementRegistry.All.Count(d => d.Group == group)</span>
+            </button>
+            @if (open)
+            {
+                <div class="chips">
+                    @foreach (var def in inGroup)
+                    {
+                        <button type="button" draggable="true" title="@def.Description"
+                                class="pchip @(State.DragNewKind == def.Kind ? "dragging" : null)"
+                                @onclick="() => Add(def.Kind)"
+                                @ondragstart="() => State.DragNewKind = def.Kind"
+                                @ondragend="() => State.DragNewKind = null">
+                            <span class="ico">@ChipIcon(def)</span>@def.Name
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    string _search = "";
+    // Collapsed by default except Session + Context (per the element-palette card).
+    readonly HashSet<string> _expanded = new() { "Session", "Context" };
+
+    protected override void OnInitialized() => State.Changed += StateHasChanged;
+    public void Dispose() => State.Changed -= StateHasChanged;
+
+    static IEnumerable<string> Groups => ElementRegistry.All.Select(d => d.Group).Distinct();
+
+    IEnumerable<ElementDef> Filtered =>
+        _search.Length == 0
+            ? ElementRegistry.All
+            : ElementRegistry.All.Where(d =>
+                d.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || d.Group.Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || d.Kind.ToString().Contains(_search, StringComparison.OrdinalIgnoreCase)
+                || d.Description.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    static string ChipIcon(ElementDef def) =>
+        def.DefaultIcon.Length > 0 ? def.DefaultIcon : def.Kind switch
+        {
+            ElementKind.Spacer => "↔",
+            ElementKind.Text => "“”",
+            ElementKind.Effort => "◇",
+            ElementKind.VimMode => "⌁",
+            ElementKind.SessionName => "☰",
+            ElementKind.CcVersion => "#",
+            ElementKind.RepoName => "⌂",
+            ElementKind.PrStatus => "⤴",
+            ElementKind.ContextPercent => "◔",
+            ElementKind.ContextRemaining => "◕",
+            ElementKind.ContextTokens => "Σ",
+            ElementKind.TokensIn => "↓",
+            ElementKind.TokensOut => "↑",
+            ElementKind.TokensCached => "≡",
+            ElementKind.TokensTotal => "Σ",
+            ElementKind.LinesChanged => "±",
+            ElementKind.Limit5h => "◴",
+            ElementKind.Limit7d => "◷",
+            ElementKind.GitStatus => "●",
+            ElementKind.GitAheadBehind => "⇅",
+            ElementKind.GitDiff => "±",
+            ElementKind.Spinner => "⠿",
+            _ => "◆",
+        };
+
+    void Toggle(string group)
+    {
+        if (!_expanded.Remove(group)) _expanded.Add(group);
+    }
+
+    void Add(ElementKind kind) => State.AddElement(kind);
+}

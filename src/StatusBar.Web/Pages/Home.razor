@@ -1,25 +1,36 @@
-@* Hack the Claude Status Bar — builder page (Phase 0 scaffold: default theme → Core composer → xterm preview).
+@* Hack the Claude Status Bar — landing hero (the only page with the grid floor).
    Copyright (C) 2026 Stephen Shanafelt
    SPDX-License-Identifier: GPL-3.0-only *@
 @page "/"
-@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject BuilderState State
 
 <PageTitle>Hack the Claude Status Bar</PageTitle>
 
-<main class="stage">
-    <h1>HACK THE CLAUDE STATUS BAR</h1>
-    <p class="tag">Visual status line builder for Claude Code &mdash; running fully in your browser.</p>
-    <div id="term"></div>
-</main>
+<section class="hero scanlines">
+    <div class="horizon"><div class="plane"></div><div class="glowline"></div><div class="fade"></div></div>
+    <img class="heromark" src="brand/logo.svg" alt="" />
+    <h1 class="glitch" data-text="HACK THE CLAUDE STATUS BAR">Hack the <i>Claude</i> Status Bar</h1>
+    <p class="tagline">A visual builder for Claude Code status lines, running entirely in your browser.
+        Drag elements onto the canvas, style every segment, watch a real terminal render it live &#8212;
+        then jack out with an installer for your OS. Your theme never leaves the URL.</p>
+    <div class="cta">
+        <a class="btn go" href="build">Jack in</a>
+        <a class="btn ghost" href="https://github.com/shanadev/Claude-Status-Bar-Builder-Web" target="_blank" rel="noopener">View source</a>
+    </div>
+    <div class="facts">
+        <span><b>36</b> elements</span>
+        <span><b>truecolor</b> ansi</span>
+        <span>theme fits <b>in the link</b></span>
+        <span><b>GPL-3.0</b> free software</span>
+    </div>
+</section>
 
 @code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (!firstRender) return;
-        var theme = DefaultTheme.Create();
-        var ctx = new SampleData().Build();
-        var text = string.Join("\n", Composer.Compose(theme, ctx));
-        var bg = Ansi.ToHex(theme.Background) ?? "#101014";
-        await JS.InvokeVoidAsync("renderStatus", text, theme.FontFamily, bg);
+        // A shared theme link should land in the builder with the theme loaded, not on the hero.
+        await State.InitializeAsync(Nav);
+        if (State.RemixedFromLink) Nav.NavigateTo("build");
     }
 }

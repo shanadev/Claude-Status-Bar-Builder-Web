@@ -1,0 +1,42 @@
+@* Hack the Claude Status Bar — the builder workspace: palette | canvas + preview | style panel.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@page "/build"
+@inject NavigationManager Nav
+@inject BuilderState State
+@implements IDisposable
+
+<PageTitle>Build — Hack the Claude Status Bar</PageTitle>
+
+<div class="workspace">
+    <aside class="ws-palette">
+        <ElementPalette />
+    </aside>
+
+    <main class="ws-main">
+        @if (State.RemixedFromLink)
+        {
+            <span class="remixchip">&#9670; remixed from a shared theme</span>
+        }
+        <SegmentCanvas />
+        <PreviewTerminal />
+    </main>
+
+    <aside class="ws-style">
+        <StylePanel OnBrowseIcon="OpenIconBrowser" />
+    </aside>
+</div>
+
+<IconBrowser @ref="_iconBrowser" />
+
+@code {
+    IconBrowser? _iconBrowser;
+
+    protected override Task OnInitializedAsync() => State.InitializeAsync(Nav);
+
+    protected override void OnInitialized() => State.Changed += StateHasChanged;
+
+    Task OpenIconBrowser() => _iconBrowser?.OpenAsync() ?? Task.CompletedTask;
+
+    public void Dispose() => State.Changed -= StateHasChanged;
+}

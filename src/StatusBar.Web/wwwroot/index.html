@@ -11,6 +11,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hack the Claude Status Bar</title>
     <base href="/" />
+    <meta name="description" content="Visual status line builder for Claude Code. Build, preview in a real terminal, jack out with an installer. The theme travels in the link." />
+    <meta property="og:title" content="Hack the Claude Status Bar" />
+    <meta property="og:description" content="Visual status line builder for Claude Code. Build · preview · jack out." />
+    <meta property="og:image" content="brand/social-card.png" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/x-icon" href="brand/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="brand/favicon.svg" />
     <link rel="preload" id="webassembly" />
     <link rel="preload" href="fonts/CaskaydiaCoveNerdFontMono-Regular.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="stylesheet" href="css/app.css" />
@@ -20,51 +27,73 @@
             font-family: 'CaskaydiaCove NFM';
             src: url('fonts/CaskaydiaCoveNerdFontMono-Regular.ttf') format('truetype');
         }
-
-        html, body {
-            margin: 0;
-            min-height: 100vh;
-            background: #05070a;
-            color: #d8e0e8;
-            font-family: 'CaskaydiaCove NFM', 'Cascadia Code', Consolas, monospace;
-        }
-
-        .stage {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 48px 24px;
-        }
-
-        .stage h1 {
-            color: #39ff88;
-            font-size: 1.6rem;
-            letter-spacing: 0.18em;
-            text-shadow: 0 0 12px rgba(57, 255, 136, 0.55);
-        }
-
-        .stage .tag {
-            color: #7a8794;
-            margin-bottom: 32px;
-        }
-
-        #term {
-            height: 140px;
-            padding: 10px 12px;
-            background: #101014;
-            border: 1px solid #1d2733;
-            border-radius: 6px;
-        }
-
-        /* xterm's helper textarea can flash a caret; preview is display-only */
-        .xterm-helper-textarea { opacity: 0 !important; }
     </style>
     <script src="xterm/xterm.js"></script>
     <script src="xterm/addon-fit.js"></script>
     <script src="preview.js"></script>
+    <script src="site.js"></script>
     <script type="importmap"></script>
 </head>
 
 <body>
+    <!-- Boot sequence: first visit only, skippable from first paint, runs while the runtime loads.
+         Deep links (#t= themes), repeat visitors and prefers-reduced-motion all skip it entirely. -->
+    <div id="boot" hidden>
+        <div class="scr">
+            <div class="bline" data-t="0">ATDT 555-0199 . . .</div>
+            <div class="bline g" data-t="350">CARRIER 28800 &#9626;&#9630;&#9626;&#9630;&#9626;</div>
+            <div class="bline" data-t="650">negotiating <span class="c">&#9619;&#9619;&#9619;&#9618;&#9618;&#9617;&#9617;&#9617;</span></div>
+            <div class="bline g" data-t="1000">CONNECT</div>
+            <div class="bline" data-t="1300">&gt; auth handshake</div>
+            <div class="bline" data-t="1550">&gt; mounting /gibson/statusbar</div>
+            <div class="bline a" data-t="1850">&gt; RISC architecture detected: good</div>
+            <div class="bline g" data-t="2150">&gt; ACCESS GRANTED</div>
+            <div class="blogo">
+                <div class="bmark"><i class="c1"></i><i class="c2"></i><i class="c3"></i></div>
+                <div class="bword">Hack the <i>Claude</i> Status Bar</div>
+                <div class="btag">// build &#183; preview &#183; jack out</div>
+                <div class="bbar"><i></i></div>
+            </div>
+            <button class="skip" type="button">skip &#9166;</button>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var el = document.getElementById('boot');
+            var seen = false;
+            try { seen = !!localStorage.getItem('sbb-booted'); } catch (e) { }
+            var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var deepLink = location.hash.indexOf('t=') >= 0;
+            if (location.pathname !== '/' || deepLink || seen || reduce) { el.remove(); return; }
+
+            el.hidden = false;
+            var done = false;
+            var timers = [];
+            function finish() {
+                if (done) return;
+                done = true;
+                timers.forEach(clearTimeout);
+                try { localStorage.setItem('sbb-booted', '1'); } catch (e) { }
+                el.classList.add('out');
+                setTimeout(function () { el.remove(); }, 300);
+                document.removeEventListener('keydown', finish, true);
+                document.removeEventListener('pointerdown', finish, true);
+            }
+            el.querySelectorAll('.bline').forEach(function (line) {
+                timers.push(setTimeout(function () { line.classList.add('show'); },
+                    parseInt(line.getAttribute('data-t'), 10)));
+            });
+            timers.push(setTimeout(function () {
+                el.querySelector('.blogo').classList.add('show');
+            }, 2400));
+            timers.push(setTimeout(finish, 3500));
+            el.querySelector('.skip').addEventListener('click', finish);
+            document.addEventListener('keydown', finish, true);
+            document.addEventListener('pointerdown', finish, true);
+            el.querySelector('.skip').focus();
+        })();
+    </script>
+
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />

@@ -1,0 +1,152 @@
+@* Hack the Claude Status Bar — segment canvas: the build surface. Chips render with their real
+   colors and sample values so the canvas already looks like the status line it produces.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@implements IDisposable
+
+<div class="panel canvas" tabindex="0" @onkeydown="OnKey" @onkeydown:stopPropagation="false">
+    @{ var ctx = State.BuildContext(160); }
+    @foreach (var (row, rowIdx) in State.Theme.Rows.Select((r, i) => (r, i)))
+    {
+        var localRow = row;
+        <div class="rowlab">
+            <span>row @(rowIdx + 1)</span>
+            <button type="button" title="palette clicks add to this row"
+                    @onclick="() => State.SelectRow(localRow)">
+                @(State.TargetRow == localRow ? "● target" : "+ element")
+            </button>
+            @if (State.Theme.Rows.Count > 1)
+            {
+                <button type="button" title="remove this row (segments included)"
+                        @onclick="() => State.RemoveRow(localRow)">&#215; row</button>
+            }
+        </div>
+        <div class="segrow"
+             @ondragover="e => { }" @ondragover:preventDefault>
+            @foreach (var (seg, segIdx) in row.Segments.Select((s, i) => (s, i)))
+            {
+                var localSeg = seg;
+                var localIdx = segIdx;
+                @if (_hover is { } h && h.Row == localRow && h.Index == localIdx && Dragging)
+                {
+                    <div class="droptarget"></div>
+                }
+                @if (seg.Element == ElementKind.Spacer)
+                {
+                    <button type="button"
+                            class="segspacer @(State.Selected == localSeg ? "selected" : null)"
+                            draggable="true"
+                            @onclick="() => State.Select(localRow, localSeg)"
+                            @ondragstart="() => StartDrag(localRow, localSeg)"
+                            @ondragend="EndDrag"
+                            @ondragenter="() => SetHover(localRow, localIdx)"
+                            @ondragover:preventDefault
+                            @ondrop="() => DropAt(localRow, localIdx)">
+                        @(string.IsNullOrEmpty(localSeg.Text) || localSeg.Text.Trim() == "flex" ? "flex" : $"{localSeg.Text} sp")
+                        <span class="del" title="remove" @onclick="() => State.RemoveSegment(localRow, localSeg)" @onclick:stopPropagation>&#215;</span>
+                    </button>
+                }
+                else
+                {
+                    var rendered = SegmentRenderer.Render(seg, ctx);
+                    var bg = Ansi.ToHex(rendered?.Bg ?? seg.Bg) ?? "#0f1720";
+                    var fg = Ansi.ToHex(rendered?.Fg ?? seg.Fg) ?? "#d2e8da";
+                    var text = rendered is null
+                        ? ElementRegistry.Get(seg.Element).Name + " (hidden)"
+                        : string.Concat(rendered.Runs.Select(r => r.Text)).Trim();
+                    <button type="button"
+                            class="seg @(State.Selected == localSeg ? "selected" : null)"
+                            style="background:@bg; color:@fg; @(rendered is null ? "opacity:.45;" : null)"
+                            draggable="true"
+                            @onclick="() => State.Select(localRow, localSeg)"
+                            @ondragstart="() => StartDrag(localRow, localSeg)"
+                            @ondragend="EndDrag"
+                            @ondragenter="() => SetHover(localRow, localIdx)"
+                            @ondragover:preventDefault
+                            @ondrop="() => DropAt(localRow, localIdx)">
+                        @text
+                        <span class="cap"></span>
+                        <span class="del" title="remove" @onclick="() => State.RemoveSegment(localRow, localSeg)" @onclick:stopPropagation>&#215;</span>
+                    </button>
+                }
+            }
+            <button type="button"
+                    class="ghostadd @(Dragging && _hover is { } g && g.Row == localRow && g.Index == localRow.Segments.Count ? "dragover" : null)"
+                    @onclick="() => State.SelectRow(localRow)"
+                    @ondragenter="() => SetHover(localRow, localRow.Segments.Count)"
+                    @ondragover:preventDefault
+                    @ondrop="() => DropAt(localRow, localRow.Segments.Count)">
+                @(Dragging ? "+ drop here" : localRow.Segments.Count == 0 ? "+ add elements from the palette" : "+ drop here")
+            </button>
+        </div>
+    }
+    <div class="rowlab" style="margin-top:14px;">
+        <button type="button" @onclick="() => State.AddRow()">+ row</button>
+    </div>
+</div>
+
+@code {
+    (Row Row, int Index)? _hover;
+
+    bool Dragging => State.DragNewKind is not null || State.DragExisting is not null;
+
+    protected override void OnInitialized() => State.Changed += StateHasChanged;
+    public void Dispose() => State.Changed -= StateHasChanged;
+
+    void StartDrag(Row row, Segment seg) => State.DragExisting = (row, seg);
+
+    void EndDrag()
+    {
+        State.DragExisting = null;
+        State.DragNewKind = null;
+        _hover = null;
+    }
+
+    void SetHover(Row row, int index)
+    {
+        if (Dragging) _hover = (row, index);
+    }
+
+    void DropAt(Row row, int index)
+    {
+        if (State.DragNewKind is ElementKind kind)
+            State.AddElement(kind, row, index);
+        else if (State.DragExisting is { } d)
+            State.MoveSegment(d.Row, d.Seg, row, index);
+        EndDrag();
+    }
+
+    void OnKey(KeyboardEventArgs e)
+    {
+        var row = State.SelectedRow;
+        var seg = State.Selected;
+        if (row is null || seg is null)
+        {
+            return;
+        }
+        int idx = row.Segments.IndexOf(seg);
+        switch (e.Key)
+        {
+            case "Escape":
+                State.ClearSelection();
+                break;
+            case "Delete":
+            case "Backspace":
+                State.RemoveSegment(row, seg);
+                break;
+            case "ArrowLeft" when e.AltKey && idx > 0:
+                State.MoveSegment(row, seg, row, idx - 1);
+                break;
+            case "ArrowRight" when e.AltKey && idx < row.Segments.Count - 1:
+                State.MoveSegment(row, seg, row, idx + 2);
+                break;
+            case "ArrowLeft" when idx > 0:
+                State.Select(row, row.Segments[idx - 1]);
+                break;
+            case "ArrowRight" when idx < row.Segments.Count - 1:
+                State.Select(row, row.Segments[idx + 1]);
+                break;
+        }
+    }
+}

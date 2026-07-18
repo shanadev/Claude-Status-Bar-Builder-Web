@@ -1,3 +1,50 @@
-﻿@inherits LayoutComponentBase
+@* Hack the Claude Status Bar — app shell: topbar, footer, toasts.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject ToastService Toasts
+@implements IDisposable
 
-@Body
+<div class="shell">
+    <header class="topbar">
+        <img class="mark" src="brand/logo.svg" alt="" />
+        <a class="word" href="">Hack the <i>Claude</i> Status Bar</a>
+        <nav>
+            <NavLink href="build" ActiveClass="active">Build</NavLink>
+            <a href="https://github.com/shanadev/Claude-Status-Bar-Builder-Web" target="_blank" rel="noopener">Source</a>
+            <NavLink class="jackout" href="export" ActiveClass="active jackout">Jack out</NavLink>
+        </nav>
+    </header>
+
+    <div class="content">
+        @Body
+    </div>
+
+    <footer class="foot">
+        <span>GPL-3.0 &#183; no accounts, no backend &#8212; the theme travels in the link</span>
+        <span>
+            <a href="" @onclick="Reboot" @onclick:preventDefault title="replay the boot sequence">reboot</a>
+            &#183; <a href="https://github.com/shanadev/Claude-Status-Bar-Builder-Web" target="_blank" rel="noopener">github</a>
+        </span>
+    </footer>
+
+    @if (Toasts.Title is not null)
+    {
+        <div class="toast @(Toasts.IsError ? "err" : null)" role="status">
+            <b>@Toasts.Title</b>
+            @if (Toasts.Flavor is not null)
+            {
+                <span>@Toasts.Flavor</span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Toasts.Changed += StateHasChanged;
+
+    Task Reboot() => JS.InvokeVoidAsync("sbReboot").AsTask();
+
+    public void Dispose() => Toasts.Changed -= StateHasChanged;
+}

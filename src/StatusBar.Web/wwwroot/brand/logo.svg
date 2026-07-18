@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Hack the Claude Status Bar - chevron-stack mark (three nested powerline caps).
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104" role="img" aria-label="Hack the Claude Status Bar">
+  <polygon points="0,0 81.6,52 0,104" fill="#00ff66"/>
+  <polygon points="26.4,0 90.1,52 26.4,104" fill="#00e5ff"/>
+  <polygon points="52.8,0 98.5,52 52.8,104" fill="#ff8a5c"/>
+</svg>

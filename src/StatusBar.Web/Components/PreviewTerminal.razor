@@ -1,0 +1,135 @@
+@* Hack the Claude Status Bar — preview terminal: a real xterm.js pane dressed as a CRT monitor.
+   What renders here is byte-identical to what the renderer emits in a real terminal.
+   Copyright (C) 2026 Stephen Shanafelt
+   SPDX-License-Identifier: GPL-3.0-only *@
+@inject BuilderState State
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="monitor @(_crt ? null : "bare")">
+    <div class="screen">
+        @if (_crt)
+        {
+            <div class="rollband"></div>
+        }
+        <div id="term"></div>
+    </div>
+    <div class="monbar">
+        <span class="monmeta"><b>cols @_cols</b> &#183; truecolor &#183; CaskaydiaCove NF &#183; renderer v1.1</span>
+        <div class="knobs">
+            <span class="knob">crt fx
+                <button type="button" class="toggle @(_crt ? "on" : null)" @onclick="ToggleCrt" title="bezel, scanlines, vignette, roll bar">
+                    <span class="tk"></span>
+                </button>
+            </span>
+            <span class="knob">ctx %
+                <input type="range" min="0" max="100" step="1" value="@State.Sample.ContextPercent"
+                       @oninput="e => { State.Sample.ContextPercent = double.Parse(e.Value!.ToString()!); State.Notify(); }" />
+            </span>
+            <span class="knob">cost
+                <input type="range" min="0" max="25" step="0.25" value="@State.Sample.CostUsd"
+                       @oninput="e => { State.Sample.CostUsd = double.Parse(e.Value!.ToString()!); State.Notify(); }" />
+            </span>
+            <span class="knob">5hr
+                <input type="range" min="0" max="100" step="1" value="@State.Sample.Limit5h"
+                       @oninput="e => { State.Sample.Limit5h = double.Parse(e.Value!.ToString()!); State.Notify(); }" />
+            </span>
+            <span class="colbtns">
+                @foreach (var preset in new[] { "80", "120", "160", "fit" })
+                {
+                    var localPreset = preset;
+                    <button type="button" class="@(_colsMode == localPreset ? "on" : null)"
+                            @onclick="() => SetColsAsync(localPreset)">@localPreset</button>
+                }
+            </span>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Survives navigating away to export and back — session-scoped, per the card.
+    static string _colsMode = "fit";
+    static int _cols = 160;
+
+    bool _crt = true;
+    bool _rendering, _dirty;
+    DotNetObjectReference<PreviewTerminal>? _selfRef;
+
+    protected override void OnInitialized() => State.Changed += OnStateChanged;
+
+    void OnStateChanged()
+    {
+        StateHasChanged();
+        _ = RenderTermAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _crt = await JS.InvokeAsync<string?>("sbGet", "sbb-crt") != "0";
+        _selfRef = DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync("watchPreviewResize", _selfRef);
+        if (_colsMode != "fit") await JS.InvokeAsync<int>("setPreviewCols", _colsMode);
+        await RenderTermAsync();
+        StateHasChanged();
+    }
+
+    /// <summary>Compose with the last known cols, render, then re-compose once if the terminal
+    /// reports a different width — flex spacers and right-alignment stay truthful.</summary>
+    async Task RenderTermAsync()
+    {
+        if (_rendering) { _dirty = true; return; }
+        _rendering = true;
+        try
+        {
+            do
+            {
+                _dirty = false;
+                // Converge: the terminal can report a different width than we composed for
+                // (first paint, font swap, resize) — recompose until they agree.
+                for (int guard = 0; guard < 4; guard++)
+                {
+                    int composedAt = _cols;
+                    int reported = await ComposeAndPaintAsync();
+                    if (reported > 0) _cols = reported;
+                    if (reported <= 0 || reported == composedAt) break;
+                }
+                StateHasChanged();
+            } while (_dirty);
+        }
+        catch { /* term not mounted yet */ }
+        finally { _rendering = false; }
+    }
+
+    async Task<int> ComposeAndPaintAsync()
+    {
+        var ctx = State.BuildContext(_cols);
+        var text = string.Join("\n", Composer.Compose(State.Theme, ctx));
+        var bg = Ansi.ToHex(State.Theme.Background) ?? "#101014";
+        return await JS.InvokeAsync<int>("renderStatus", text, State.Theme.FontFamily, bg);
+    }
+
+    [JSInvokable]
+    public Task OnHostResize() => RenderTermAsync();
+
+    async Task ToggleCrt()
+    {
+        _crt = !_crt;
+        await JS.InvokeVoidAsync("sbSet", "sbb-crt", _crt ? "1" : "0");
+    }
+
+    async Task SetColsAsync(string mode)
+    {
+        _colsMode = mode;
+        var cols = await JS.InvokeAsync<int>("setPreviewCols", mode);
+        if (cols > 0) _cols = cols;
+        await RenderTermAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        State.Changed -= OnStateChanged;
+        try { await JS.InvokeVoidAsync("unwatchPreviewResize"); } catch { /* page unloading */ }
+        _selfRef?.Dispose();
+    }
+}
