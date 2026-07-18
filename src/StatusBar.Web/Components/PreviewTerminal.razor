@@ -120,7 +120,9 @@
     async Task<int> ComposeAndPaintAsync()
     {
         var ctx = State.BuildContext(_cols);
-        var text = string.Join("\n", Composer.Compose(State.Theme, ctx));
+        // Zero-length rows are all-hidden rows the real renderer drops too — skip them
+        // so the preview shows exactly what ships (deliberate blank rows compose to " ").
+        var text = string.Join("\n", Composer.Compose(State.Theme, ctx).Where(l => l.Length > 0));
         var bg = Ansi.ToHex(State.Theme.Background) ?? "#101014";
         return await JS.InvokeAsync<int>("renderStatus", text, State.Theme.FontFamily, bg);
     }

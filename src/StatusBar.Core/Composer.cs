@@ -82,6 +82,14 @@ public static class Composer
             if (b.IsSpacer) sb.Append(new string(' ', b.Flex ? flexEach : b.Width));
             else sb.Append(b.Ansi);
         }
+        if (sb.Length == 0)
+        {
+            // A row with no segments is a deliberate blank line: emit a single space,
+            // because Claude Code drops fully empty lines from statusline output. A row
+            // whose segments all hid at runtime collapses to "" — callers skip those.
+            if (row.Segments.Count == 0) sb.Append(' ');
+            else return "";
+        }
         sb.Append(Ansi.Reset);
         return sb.ToString();
     }

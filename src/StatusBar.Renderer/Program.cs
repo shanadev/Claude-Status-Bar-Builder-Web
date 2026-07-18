@@ -37,7 +37,7 @@ if (!Console.IsInputRedirected || args.Contains("--demo"))
     Console.Out.WriteLine("would normally wait forever. Here is your theme rendered with sample data:");
     Console.Out.WriteLine();
     foreach (var line in Composer.Compose(theme, demoCtx))
-        Console.Out.WriteLine(line);
+        if (line.Length > 0) Console.Out.WriteLine(line);
     Console.Out.WriteLine();
     Console.Out.WriteLine("Theme: " + themePath);
     Console.Out.WriteLine();
@@ -53,8 +53,10 @@ var input = StatusInput.Parse(stdin);
 var computed = ComputedGatherer.Gather(theme, input);
 
 var ctx = new RenderContext { Input = input, Computed = computed };
+// Zero-length rows = every segment hid at runtime — drop them so the row collapses
+// instead of leaving a blank line (deliberate blank rows compose to " " and survive).
 foreach (var line in Composer.Compose(theme, ctx))
-    Console.Out.WriteLine(line);
+    if (line.Length > 0) Console.Out.WriteLine(line);
 
 internal static class ComputedGatherer
 {

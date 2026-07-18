@@ -27,12 +27,16 @@ public sealed class ToastService
 
         _cts?.Cancel();
         _cts = new CancellationTokenSource();
-        var token = _cts.Token;
-        _ = Task.Delay(2600, token).ContinueWith(t =>
-        {
-            if (t.IsCanceled) return;
-            Title = null;
-            Changed?.Invoke();
-        }, TaskScheduler.FromCurrentSynchronizationContext());
+        _ = HideAfterDelayAsync(_cts.Token);
+    }
+
+    // No ContinueWith/FromCurrentSynchronizationContext here: Blazor WASM has no
+    // SynchronizationContext, so that overload throws (the "unhandled error" banner
+    // right after every toast). Plain await resumes on the single WASM thread anyway.
+    async Task HideAfterDelayAsync(CancellationToken token)
+    {
+        try { await Task.Delay(2600, token); } catch (TaskCanceledException) { return; }
+        Title = null;
+        Changed?.Invoke();
     }
 }

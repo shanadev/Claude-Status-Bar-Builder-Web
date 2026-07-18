@@ -12,8 +12,26 @@ let colsMode = 'fit'; // 'fit' tracks the panel width; a number pins the column 
 let resizeRef = null, resizeTimer = null;
 const ESC = String.fromCharCode(27);
 
+// One resize listener for the lifetime of the page — ensureTerm can run more than
+// once (see below), so registration must not live inside it.
+window.addEventListener('resize', function () {
+    if (colsMode !== 'fit' || !resizeRef) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+        resizeRef.invokeMethodAsync('OnHostResize');
+    }, 150);
+});
+
 function ensureTerm(font, bg) {
-    if (term) return;
+    if (term) {
+        // Navigating away destroys the #term div Blazor rendered; the xterm instance
+        // keeps writing into that detached node forever (the "dead preview" after
+        // export → build). Detect it and rebuild against the fresh div.
+        if (term.element && term.element.isConnected) return;
+        try { if (webglAddon) webglAddon.dispose(); } catch (e) { }
+        try { term.dispose(); } catch (e) { }
+        term = null; fitAddon = null; webglAddon = null;
+    }
     term = new Terminal({
         convertEol: true,
         disableStdin: true,
@@ -45,13 +63,6 @@ function ensureTerm(font, bg) {
     } catch (e) {
         webglAddon = null; // no WebGL2 — DOM renderer still works, icons just clip
     }
-    window.addEventListener('resize', function () {
-        if (colsMode !== 'fit' || !resizeRef) return;
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function () {
-            resizeRef.invokeMethodAsync('OnHostResize');
-        }, 150);
-    });
 }
 
 function currentCols() {
