@@ -1,0 +1,432 @@
+<Window x:Class="StatusBar.Builder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:local="clr-namespace:StatusBar.Builder"
+        Title="Claude Status Bar Builder" Height="920" Width="1500"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="Button" x:Key="Tool">
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ToolLabel">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="10,0,4,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="Mini">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#555555"/>
+        </Style>
+        <Style TargetType="StackPanel" x:Key="SampleItem">
+            <Setter Property="Margin" Value="6,2"/>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- ══ Toolbar ══ -->
+        <Border DockPanel.Dock="Top" Padding="8,6" Background="#eeeef2">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button Content="Publish renderer" Style="{StaticResource Tool}" Click="Publish_Click"
+                            ToolTip="Builds the little StatusBar.Renderer.exe that Claude Code will run"/>
+                    <Button Content="✓ Apply to Claude Code" FontWeight="Bold" Style="{StaticResource Tool}" Click="Apply_Click"
+                            ToolTip="Saves the theme and points your ~/.claude/settings.json statusLine at it (backs up settings first)"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="New" Style="{StaticResource Tool}" Click="New_Click"/>
+                    <Button Content="Open…" Style="{StaticResource Tool}" Click="Open_Click"/>
+                    <Button Content="Save" Style="{StaticResource Tool}" Click="Save_Click"/>
+                    <Button Content="Save As…" Style="{StaticResource Tool}" Click="SaveAs_Click"/>
+                    <Button Content="Load default" Style="{StaticResource Tool}" Click="LoadDefault_Click"/>
+                    <TextBlock Text="Theme:" Style="{StaticResource ToolLabel}"/>
+                    <TextBox Width="130" VerticalAlignment="Center"
+                             Text="{Binding CurrentTheme.Name, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="Preview font:" Style="{StaticResource ToolLabel}"/>
+                    <TextBox Width="150" VerticalAlignment="Center"
+                             Text="{Binding CurrentTheme.FontFamily, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Font used in the preview terminal. 'CaskaydiaCove NFM' is bundled; match your real terminal's font for fidelity."/>
+                    <TextBlock Text="Terminal bg:" Style="{StaticResource ToolLabel}"/>
+                    <local:ColorField Spec="{Binding CurrentTheme.Background}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ══ Live preview (real xterm.js terminal) ══ -->
+        <Border DockPanel.Dock="Top" Height="150" Background="#101014">
+            <Grid>
+                <TextBlock Text="Loading preview terminal…" Foreground="#666666" FontSize="13"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <wv2:WebView2 x:Name="Web" DefaultBackgroundColor="Black"/>
+            </Grid>
+        </Border>
+
+        <!-- ══ Sample data ══ -->
+        <Expander DockPanel.Dock="Bottom" Header="Sample data — drive the preview to see thresholds, gradients and hiding react" IsExpanded="True" Padding="4">
+            <ScrollViewer MaxHeight="190" VerticalScrollBarVisibility="Auto">
+                <WrapPanel>
+                    <StackPanel Style="{StaticResource SampleItem}" Width="190">
+                        <TextBlock Style="{StaticResource Mini}">
+                            <Run Text="Context used %: "/><Run Text="{Binding Sample.ContextPercent, StringFormat={}{0:0}}"/>
+                        </TextBlock>
+                        <Slider Minimum="0" Maximum="100" Value="{Binding Sample.ContextPercent}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}" Width="190">
+                        <TextBlock Style="{StaticResource Mini}">
+                            <Run Text="5-hour limit %: "/><Run Text="{Binding Sample.Limit5h, StringFormat={}{0:0}}"/>
+                        </TextBlock>
+                        <Slider Minimum="0" Maximum="100" Value="{Binding Sample.Limit5h}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}" Width="190">
+                        <TextBlock Style="{StaticResource Mini}">
+                            <Run Text="Weekly limit %: "/><Run Text="{Binding Sample.Limit7d, StringFormat={}{0:0}}"/>
+                        </TextBlock>
+                        <Slider Minimum="0" Maximum="100" Value="{Binding Sample.Limit7d}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}" Width="190">
+                        <TextBlock Style="{StaticResource Mini}">
+                            <Run Text="Session minutes: "/><Run Text="{Binding Sample.DurationMin, StringFormat={}{0:0}}"/>
+                        </TextBlock>
+                        <Slider Minimum="0" Maximum="600" Value="{Binding Sample.DurationMin}"/>
+                    </StackPanel>
+
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Cost $" Style="{StaticResource Mini}"/>
+                        <TextBox Width="52" FontSize="11" Text="{Binding Sample.CostUsd, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="API min" Style="{StaticResource Mini}"/>
+                        <TextBox Width="44" FontSize="11" Text="{Binding Sample.ApiMin, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Lines + / −" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="40" FontSize="11" Text="{Binding Sample.LinesAdded, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="40" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.LinesRemoved, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Tokens in/out/cached (k)" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="38" FontSize="11" Text="{Binding Sample.TokensInK, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="38" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.TokensOutK, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="38" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.TokensCachedK, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Ctx size (k)" Style="{StaticResource Mini}"/>
+                        <TextBox Width="44" FontSize="11" Text="{Binding Sample.ContextSizeK, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Model" Style="{StaticResource Mini}"/>
+                        <TextBox Width="60" FontSize="11" Text="{Binding Sample.ModelName, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Model id" Style="{StaticResource Mini}"/>
+                        <TextBox Width="110" FontSize="11" Text="{Binding Sample.ModelId, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Effort" Style="{StaticResource Mini}"/>
+                        <ComboBox Width="70" FontSize="11" SelectedValue="{Binding Sample.EffortLevel}" SelectedValuePath="Content">
+                            <ComboBoxItem Content=""/>
+                            <ComboBoxItem Content="low"/>
+                            <ComboBoxItem Content="medium"/>
+                            <ComboBoxItem Content="high"/>
+                            <ComboBoxItem Content="xhigh"/>
+                            <ComboBoxItem Content="max"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Thinking" Style="{StaticResource Mini}"/>
+                        <CheckBox IsChecked="{Binding Sample.ThinkingEnabled}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Has limits" Style="{StaticResource Mini}"/>
+                        <CheckBox IsChecked="{Binding Sample.HasLimits}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Reset in h (5h / wk)" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="38" FontSize="11" Text="{Binding Sample.Limit5hResetHours, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="38" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.Limit7dResetHours, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Branch" Style="{StaticResource Mini}"/>
+                        <TextBox Width="80" FontSize="11" Text="{Binding Sample.GitBranch, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Staged/mod/untr" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="28" FontSize="11" Text="{Binding Sample.GitStaged, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="28" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.GitModified, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="28" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.GitUntracked, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Ahead/behind" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="28" FontSize="11" Text="{Binding Sample.GitAhead, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="28" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.GitBehind, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Git + / −" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="40" FontSize="11" Text="{Binding Sample.GitLinesAdded, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="40" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.GitLinesRemoved, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Directory" Style="{StaticResource Mini}"/>
+                        <TextBox Width="130" FontSize="11" Text="{Binding Sample.Cwd, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Version" Style="{StaticResource Mini}"/>
+                        <TextBox Width="50" FontSize="11" Text="{Binding Sample.ProjectVersion, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Repo owner / name" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="55" FontSize="11" Text="{Binding Sample.RepoOwner, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="65" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.RepoName, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Worktree" Style="{StaticResource Mini}"/>
+                        <TextBox Width="70" FontSize="11" Text="{Binding Sample.WorktreeName, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Vim mode" Style="{StaticResource Mini}"/>
+                        <ComboBox Width="80" FontSize="11" SelectedValue="{Binding Sample.VimMode}" SelectedValuePath="Content">
+                            <ComboBoxItem Content=""/>
+                            <ComboBoxItem Content="NORMAL"/>
+                            <ComboBoxItem Content="INSERT"/>
+                            <ComboBoxItem Content="VISUAL"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Agent" Style="{StaticResource Mini}"/>
+                        <TextBox Width="70" FontSize="11" Text="{Binding Sample.AgentName, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Session name" Style="{StaticResource Mini}"/>
+                        <TextBox Width="85" FontSize="11" Text="{Binding Sample.SessionName, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Output style" Style="{StaticResource Mini}"/>
+                        <TextBox Width="70" FontSize="11" Text="{Binding Sample.OutputStyle, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="CC version" Style="{StaticResource Mini}"/>
+                        <TextBox Width="55" FontSize="11" Text="{Binding Sample.CcVersion, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="Has PR" Style="{StaticResource Mini}"/>
+                        <CheckBox IsChecked="{Binding Sample.HasPr}"/>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}">
+                        <TextBlock Text="PR # / state" Style="{StaticResource Mini}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBox Width="38" FontSize="11" Text="{Binding Sample.PrNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Width="70" FontSize="11" Margin="2,0,0,0" Text="{Binding Sample.PrState, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Style="{StaticResource SampleItem}" Width="170">
+                        <TextBlock Style="{StaticResource Mini}">
+                            <Run Text="Terminal columns: "/><Run Text="{Binding Sample.Columns, StringFormat={}{0:0}}"/>
+                        </TextBlock>
+                        <Slider Minimum="60" Maximum="240" Value="{Binding Sample.Columns}"/>
+                    </StackPanel>
+                </WrapPanel>
+            </ScrollViewer>
+        </Expander>
+
+        <!-- ══ Main working area ══ -->
+        <Grid Margin="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="245"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="365"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Element palette -->
+            <GroupBox Grid.Column="0" Header="Elements — click to add">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PaletteHost" Margin="4"/>
+                </ScrollViewer>
+            </GroupBox>
+
+            <!-- Rows / segments -->
+            <GroupBox Grid.Column="1" Header="Status line layout" Margin="4,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="4">
+                        <ItemsControl x:Name="RowsHost" ItemsSource="{Binding CurrentTheme.Rows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#c8c8d0" BorderThickness="1" CornerRadius="4" Margin="0,4" Padding="6">
+                                        <StackPanel>
+                                            <DockPanel Margin="0,0,0,4">
+                                                <Button DockPanel.Dock="Right" Content="✕ row" FontSize="10" Padding="4,1"
+                                                        Click="DeleteRow_Click" Tag="{Binding}"/>
+                                                <TextBlock Text="Separator:" VerticalAlignment="Center" FontSize="11"/>
+                                                <ComboBox Width="105" Margin="4,0" FontSize="11"
+                                                          ItemsSource="{x:Static local:MainWindow.SeparatorChoices}"
+                                                          SelectedItem="{Binding Separator}"/>
+                                                <TextBlock Text="Caps:" VerticalAlignment="Center" FontSize="11"/>
+                                                <ComboBox Width="95" Margin="4,0" FontSize="11"
+                                                          ItemsSource="{x:Static local:MainWindow.CapChoices}"
+                                                          SelectedItem="{Binding Caps}"/>
+                                                <local:ColorField LabelText="Sep color" Spec="{Binding SeparatorFg}"/>
+                                            </DockPanel>
+                                            <ListBox ItemsSource="{Binding Segments}" SelectionMode="Single" MinHeight="34"
+                                                     SelectionChanged="SegmentList_SelectionChanged"
+                                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                                     ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                                <ListBox.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal"/>
+                                                    </ItemsPanelTemplate>
+                                                </ListBox.ItemsPanel>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="2,1">
+                                                            <TextBlock Text="{Binding Icon}" FontSize="12" Margin="0,0,3,0"/>
+                                                            <TextBlock Text="{Binding Element}" FontSize="12"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <Button Content="＋ Add row" HorizontalAlignment="Left" Padding="8,3" Margin="0,4" Click="AddRow_Click"/>
+                        <TextBlock FontSize="11" Foreground="#888888" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Text="Tip: click an element on the left to add it after the selected segment. A Spacer breaks the capsule chain into separate clusters; 'flex' pushes what follows to the right edge."/>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+
+            <!-- Inspector -->
+            <GroupBox Grid.Column="2" Header="Selected segment">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="InspectorRoot" Margin="6" IsEnabled="False">
+                        <TextBlock x:Name="ElementTitle" FontWeight="Bold" FontSize="14" Text="Nothing selected"/>
+                        <TextBlock x:Name="ElementDesc" TextWrapping="Wrap" FontSize="11" Foreground="#666666" Margin="0,2,0,8"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="◀" FontSize="11" Padding="6,2" Margin="0,0,4,0" Click="MoveLeft_Click" ToolTip="Move left"/>
+                            <Button Content="▶" FontSize="11" Padding="6,2" Margin="0,0,4,0" Click="MoveRight_Click" ToolTip="Move right"/>
+                            <Button Content="▲ row" FontSize="11" Padding="6,2" Margin="0,0,4,0" Click="MoveRowUp_Click" ToolTip="Move to the row above"/>
+                            <Button Content="▼ row" FontSize="11" Padding="6,2" Margin="0,0,4,0" Click="MoveRowDown_Click" ToolTip="Move to the row below"/>
+                            <Button Content="✕ delete" FontSize="11" Padding="6,2" Click="DeleteSegment_Click"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="TextPanel" Visibility="Collapsed">
+                            <TextBlock x:Name="TextPanelLabel" Text="Text" FontSize="11"/>
+                            <TextBox x:Name="TextValueBox" FontSize="12" Margin="0,2,0,8" TextChanged="TextValueBox_TextChanged"/>
+                        </StackPanel>
+
+                        <StackPanel x:Name="StylePanel">
+                            <TextBlock Text="Label" FontSize="11"/>
+                            <TextBox x:Name="LabelBox" FontSize="12" Margin="0,2,0,6" TextChanged="LabelBox_TextChanged"/>
+
+                            <TextBlock Text="Icon (empty = none)" FontSize="11"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                <TextBox x:Name="IconBox" Width="70" FontSize="12" TextChanged="IconBox_TextChanged"/>
+                                <Button Content="Browse all…" FontSize="11" Margin="6,0,0,0" Padding="6,1"
+                                        Click="BrowseIcons_Click"
+                                        ToolTip="Search 12,000+ emoji and Nerd Font icons by name or keyword"/>
+                            </StackPanel>
+                            <WrapPanel x:Name="IconQuickPanel" Margin="0,2,0,8"/>
+
+                            <StackPanel x:Name="FormatPanel" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="Format" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox x:Name="FormatCombo" Width="150" FontSize="11" DisplayMemberPath="Display"
+                                          SelectionChanged="FormatCombo_SelectionChanged"/>
+                            </StackPanel>
+                            <StackPanel x:Name="OptionPanel" Orientation="Horizontal" Margin="0,0,0,6">
+                                <TextBlock Text="Extra" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <ComboBox x:Name="OptionCombo" Width="150" FontSize="11" DisplayMemberPath="Display"
+                                          SelectionChanged="OptionCombo_SelectionChanged"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Colors" FontSize="12" FontWeight="Bold" Margin="0,4,0,2"/>
+                            <local:ColorField LabelText="Background" Spec="{Binding Bg}" Margin="0,1"/>
+                            <local:ColorField LabelText="Text" Spec="{Binding Fg}" Margin="0,1"/>
+                            <local:ColorField LabelText="Icon" Spec="{Binding IconFg}" Margin="0,1"/>
+                            <local:ColorField LabelText="Label" Spec="{Binding LabelFg}" Margin="0,1"/>
+                            <local:ColorField LabelText="Value" Spec="{Binding ValueFg}" Margin="0,1"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <CheckBox Content="Bold" FontSize="11" IsChecked="{Binding Bold}" Margin="0,0,8,0"/>
+                                <CheckBox Content="Dim" FontSize="11" IsChecked="{Binding Dim}" Margin="0,0,8,0"/>
+                                <CheckBox Content="Italic" FontSize="11" IsChecked="{Binding Italic}" Margin="0,0,8,0"/>
+                                <CheckBox Content="Underline" FontSize="11" IsChecked="{Binding Underline}"/>
+                            </StackPanel>
+                            <CheckBox Content="Hide when data is missing" FontSize="11" Margin="0,6,0,0"
+                                      IsChecked="{Binding HideWhenMissing}"/>
+
+                            <CheckBox x:Name="BarToggle" Content="Progress bar" FontSize="12" FontWeight="Bold" Margin="0,10,0,2"
+                                      Checked="BarToggle_Changed" Unchecked="BarToggle_Changed"/>
+                            <StackPanel x:Name="BarPanel" Visibility="Collapsed" Margin="14,0,0,0">
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Width" FontSize="11" Width="60" VerticalAlignment="Center"/>
+                                    <Slider Width="130" Minimum="4" Maximum="30" Value="{Binding Bar.Width}" VerticalAlignment="Center"
+                                            IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                    <TextBlock Text="{Binding Bar.Width}" FontSize="11" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Chars" FontSize="11" Width="60" VerticalAlignment="Center"/>
+                                    <ComboBox x:Name="BarCharCombo" Width="70" FontSize="12" SelectionChanged="BarCharCombo_SelectionChanged"/>
+                                    <TextBox Width="30" FontSize="12" Margin="6,0,0,0" MaxLength="2"
+                                             Text="{Binding Bar.FilledChar, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBox Width="30" FontSize="12" Margin="4,0,0,0" MaxLength="2"
+                                             Text="{Binding Bar.EmptyChar, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                                <CheckBox Content="Smooth fill (⅛ blocks, █ only)" FontSize="11" Margin="0,2"
+                                          IsChecked="{Binding Bar.Smooth}"/>
+                                <local:ColorField LabelText="Fill" Spec="{Binding Bar.FilledFg}" Margin="0,1"/>
+                                <local:ColorField LabelText="Empty" Spec="{Binding Bar.EmptyFg}" Margin="0,1"/>
+                                <local:ColorField LabelText="Grad from" Spec="{Binding Bar.GradientFrom}" Margin="0,1"/>
+                                <local:ColorField LabelText="Grad to" Spec="{Binding Bar.GradientTo}" Margin="0,1"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                    <TextBlock Text="Brackets" FontSize="11" Width="60" VerticalAlignment="Center"/>
+                                    <TextBox Width="40" FontSize="12" MaxLength="2"
+                                             Text="{Binding Bar.Brackets, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Two characters wrapping the bar, e.g. []"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel x:Name="ThresholdSection" Visibility="Collapsed">
+                                <TextBlock Text="Thresholds — recolor when value ≥" FontSize="12" FontWeight="Bold" Margin="0,10,0,2"/>
+                                <ItemsControl ItemsSource="{Binding Thresholds}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <DockPanel Margin="0,2">
+                                                <Button DockPanel.Dock="Right" Content="✕" FontSize="10" Padding="4,0"
+                                                        Click="RemoveThreshold_Click" Tag="{Binding}"/>
+                                                <TextBox Width="36" FontSize="11" VerticalAlignment="Center"
+                                                         Text="{Binding AtOrAbove, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <local:ColorField LabelText="fg" Spec="{Binding Fg}" Margin="4,0,0,0"/>
+                                                <local:ColorField LabelText="bg" Spec="{Binding Bg}" Margin="4,0,0,0"/>
+                                            </DockPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="＋ add threshold" FontSize="11" HorizontalAlignment="Left" Padding="6,2"
+                                        Margin="0,2,0,4" Click="AddThreshold_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
+</Window>

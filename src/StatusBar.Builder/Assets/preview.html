@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  Claude Status Bar Builder — xterm.js preview page.
+  Copyright (C) 2026 Stephen Shanafelt
+  SPDX-License-Identifier: GPL-3.0-only
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="xterm/xterm.css">
+<style>
+  @font-face {
+    font-family: 'CaskaydiaCove NFM';
+    src: url('fonts/CaskaydiaCoveNerdFontMono-Regular.ttf') format('truetype');
+  }
+  html, body { margin: 0; height: 100%; box-sizing: border-box; background: #101014; }
+  body { padding: 10px 12px; }
+  #term { height: 100%; }
+  /* xterm's helper textarea can flash a caret; preview is display-only */
+  .xterm-helper-textarea { opacity: 0 !important; }
+</style>
+<script src="xterm/xterm.js"></script>
+<script src="xterm/addon-fit.js"></script>
+</head>
+<body>
+<div id="term"></div>
+<script>
+  var term = null, fitAddon = null;
+  var ESC = String.fromCharCode(27);
+
+  function ensureTerm(font, bg) {
+    if (term) return;
+    term = new Terminal({
+      convertEol: true,
+      disableStdin: true,
+      cursorBlink: false,
+      rows: 5,
+      fontSize: 15,
+      fontFamily: font,
+      lineHeight: 1.15,
+      theme: { background: bg },
+      allowTransparency: false,
+      // Emoji wider than their measured cell (🧠 etc.) otherwise get painted over
+      // by the next cell's background — rescale them to fit instead of clipping.
+      rescaleOverlappingGlyphs: true,
+      scrollback: 0
+    });
+    fitAddon = new FitAddon.FitAddon();
+    term.loadAddon(fitAddon);
+    term.open(document.getElementById('term'));
+    fitAddon.fit();
+    window.addEventListener('resize', function () { fitAddon.fit(); });
+  }
+
+  // Called from WPF. text = ANSI lines joined with \n. Returns current cols so C# can sync flex spacers.
+  window.renderStatus = function (text, font, bg) {
+    var stack = "'" + font + "', 'CaskaydiaCove NFM', 'Cascadia Code', Consolas, monospace";
+    ensureTerm(stack, bg);
+    if (term.options.fontFamily !== stack) term.options.fontFamily = stack;
+    term.options.theme = { background: bg };
+    document.body.style.background = bg;
+    fitAddon.fit();
+    term.reset();
+    term.write(ESC + '[?25l' + text.split('\n').join('\r\n'));
+    return term.cols;
+  };
+</script>
+</body>
+</html>

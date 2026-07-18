@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StatusBar.Builder/StatusBar.Builder.csproj" />
+    <Project Path="src/StatusBar.Core/StatusBar.Core.csproj" />
+    <Project Path="src/StatusBar.Renderer/StatusBar.Renderer.csproj" />
+  </Folder>
+</Solution>

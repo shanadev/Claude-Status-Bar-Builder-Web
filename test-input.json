@@ -1,0 +1,57 @@
+﻿{
+    "cwd":  "C:\\ClaudeStatusBarBuilder",
+    "session_id":  "test-session-abc",
+    "transcript_path":  "C:/fake/transcript.jsonl",
+    "model":  {
+                  "id":  "claude-opus-4-8",
+                  "display_name":  "Opus"
+              },
+    "workspace":  {
+                      "current_dir":  "C:\\ClaudeStatusBarBuilder",
+                      "project_dir":  "C:\\ClaudeStatusBarBuilder",
+                      "added_dirs":  [
+
+                                     ]
+                  },
+    "version":  "2.1.90",
+    "output_style":  {
+                         "name":  "default"
+                     },
+    "cost":  {
+                 "total_cost_usd":  0.4512,
+                 "total_duration_ms":  3600000,
+                 "total_api_duration_ms":  840000,
+                 "total_lines_added":  42,
+                 "total_lines_removed":  10
+             },
+    "context_window":  {
+                           "total_input_tokens":  84000,
+                           "total_output_tokens":  3400,
+                           "context_window_size":  200000,
+                           "used_percentage":  42,
+                           "remaining_percentage":  58,
+                           "current_usage":  {
+                                                 "input_tokens":  8500,
+                                                 "output_tokens":  1200,
+                                                 "cache_creation_input_tokens":  5000,
+                                                 "cache_read_input_tokens":  12000
+                                             }
+                       },
+    "exceeds_200k_tokens":  false,
+    "effort":  {
+                   "level":  "high"
+               },
+    "thinking":  {
+                     "enabled":  true
+                 },
+    "rate_limits":  {
+                        "five_hour":  {
+                                          "used_percentage":  78.2,
+                                          "resets_at":  1784332398
+                                      },
+                        "seven_day":  {
+                                          "used_percentage":  37.5,
+                                          "resets_at":  1784539398
+                                      }
+                    }
+}

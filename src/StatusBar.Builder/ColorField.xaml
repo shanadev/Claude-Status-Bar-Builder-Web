@@ -1,0 +1,27 @@
+<UserControl x:Class="StatusBar.Builder.ColorField"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="26">
+    <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="LabelBlock" VerticalAlignment="Center" FontSize="11" Margin="0,0,4,0"/>
+        <Border x:Name="Swatch" Width="16" Height="16" BorderBrush="#999999" BorderThickness="1"
+                VerticalAlignment="Center" Margin="0,0,4,0" Background="Transparent"/>
+        <TextBox x:Name="SpecBox" Width="72" VerticalAlignment="Center" FontSize="11"
+                 TextChanged="SpecBox_TextChanged"/>
+        <ToggleButton x:Name="PickBtn" Width="20" Height="20" Content="▾" FontSize="10"
+                      VerticalAlignment="Center" Margin="2,0,0,0"/>
+        <Popup IsOpen="{Binding IsChecked, ElementName=PickBtn}" StaysOpen="False"
+               PlacementTarget="{Binding ElementName=PickBtn}" Placement="Bottom">
+            <Border Background="#f8f8f8" BorderBrush="#666666" BorderThickness="1" Padding="6">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,4">
+                        <Button DockPanel.Dock="Right" Content="custom…" FontSize="11" Click="Custom_Click"
+                                ToolTip="Pick any 24-bit color (your terminal supports truecolor)"/>
+                        <Button Content="none / terminal default" FontSize="11" Margin="0,0,4,0" Click="None_Click"/>
+                    </DockPanel>
+                    <WrapPanel x:Name="SwatchPanel" Width="240"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </StackPanel>
+</UserControl>

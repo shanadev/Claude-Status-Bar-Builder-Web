@@ -427,3 +427,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# ── Project-specific ─────────────────────────────────────
+# Claude session working notes (private)
+memory/
+# Personal theme files the Builder manages (user data, not source)
+themes/

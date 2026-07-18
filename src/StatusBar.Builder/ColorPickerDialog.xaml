@@ -1,0 +1,70 @@
+<Window x:Class="StatusBar.Builder.ColorPickerDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Custom color" SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False" WindowStyle="ToolWindow">
+    <StackPanel Margin="12">
+        <StackPanel Orientation="Horizontal">
+            <Grid x:Name="SvBox" Width="256" Height="256" Background="Transparent" Cursor="Cross"
+                  MouseLeftButtonDown="SvBox_MouseDown" MouseMove="SvBox_MouseMove" MouseLeftButtonUp="SvBox_MouseUp">
+                <Rectangle x:Name="SvBase" Fill="Red"/>
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="White" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="Transparent" Offset="0"/>
+                            <GradientStop Color="Black" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Canvas>
+                    <Ellipse x:Name="SvThumb" Width="12" Height="12" Stroke="White" StrokeThickness="2" Fill="Transparent">
+                        <Ellipse.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="0"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+                </Canvas>
+            </Grid>
+            <Grid x:Name="HueBox" Width="24" Height="256" Margin="10,0,0,0" Cursor="Cross"
+                  MouseLeftButtonDown="HueBox_MouseDown" MouseMove="HueBox_MouseMove" MouseLeftButtonUp="HueBox_MouseUp">
+                <Rectangle>
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#FF0000" Offset="0"/>
+                            <GradientStop Color="#FFFF00" Offset="0.167"/>
+                            <GradientStop Color="#00FF00" Offset="0.333"/>
+                            <GradientStop Color="#00FFFF" Offset="0.5"/>
+                            <GradientStop Color="#0000FF" Offset="0.667"/>
+                            <GradientStop Color="#FF00FF" Offset="0.833"/>
+                            <GradientStop Color="#FF0000" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Canvas>
+                    <Border x:Name="HueThumb" Width="24" Height="5" Background="Transparent"
+                            BorderBrush="White" BorderThickness="1.5"/>
+                </Canvas>
+            </Grid>
+        </StackPanel>
+        <DockPanel Margin="0,12,0,0">
+            <Border x:Name="PreviewOld" Width="30" Height="24" BorderBrush="#888888" BorderThickness="1"
+                    ToolTip="Current color"/>
+            <Border x:Name="PreviewNew" Width="30" Height="24" BorderBrush="#888888" BorderThickness="1"
+                    Margin="4,0,10,0" ToolTip="New color"/>
+            <TextBlock Text="Hex" VerticalAlignment="Center" FontSize="12" Margin="0,0,4,0"/>
+            <TextBox x:Name="HexBox" Width="76" VerticalAlignment="Center" FontSize="12"
+                     TextChanged="HexBox_TextChanged"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="OK" Width="64" Margin="0,0,6,0" Click="Ok_Click" IsDefault="True"/>
+                <Button Content="Cancel" Width="64" IsCancel="True"/>
+            </StackPanel>
+        </DockPanel>
+    </StackPanel>
+</Window>
