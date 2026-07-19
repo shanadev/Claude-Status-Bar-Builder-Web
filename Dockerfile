@@ -13,7 +13,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
+# The CLIENT publish is what runs Blazor's fingerprinting + index.html
+# placeholder substitution — the server publish alone would ship a raw
+# index.html with a literal #[.{fingerprint}] boot script (dead site).
+# Publish both and overlay the client's processed wwwroot onto the server.
+RUN dotnet publish src/StatusBar.Web -c Release -o /client --nologo
 RUN dotnet publish src/StatusBar.Server -c Release -o /app --nologo
+RUN rm -rf /app/wwwroot && cp -r /client/wwwroot /app/wwwroot
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
