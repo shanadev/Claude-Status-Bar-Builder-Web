@@ -93,6 +93,46 @@ public sealed class BuilderState : IDisposable
         Changed?.Invoke();
     }
 
+    /// <summary>Jumps straight to "nothing selected" (the status-bar settings panel).</summary>
+    public void SelectNone() { SelectedRow = null; Selected = null; Changed?.Invoke(); }
+
+    public void MoveRow(Row row, int delta)
+    {
+        int from = Theme.Rows.IndexOf(row);
+        int to = from + delta;
+        if (from < 0 || to < 0 || to >= Theme.Rows.Count) return;
+        Theme.Rows.RemoveAt(from);
+        Theme.Rows.Insert(to, row);
+        Notify();
+    }
+
+    /// <summary>
+    /// Recolors the current bar with another theme's palette — layout and elements stay.
+    /// Segment bg/fg pairs cycle across the bar in order; per-part overrides are cleared
+    /// so they can't fight the new scheme.
+    /// </summary>
+    public void ApplyPalette(Theme source)
+    {
+        Theme.Background = source.Background;
+        var pairs = source.Rows.SelectMany(r => r.Segments)
+            .Where(s => s.Element != ElementKind.Spacer && (s.Bg is not null || s.Fg is not null))
+            .Select(s => (s.Bg, s.Fg)).ToList();
+        if (pairs.Count > 0)
+        {
+            int i = 0;
+            foreach (var seg in Theme.Rows.SelectMany(r => r.Segments)
+                         .Where(s => s.Element != ElementKind.Spacer))
+            {
+                (seg.Bg, seg.Fg) = pairs[i++ % pairs.Count];
+                seg.IconFg = seg.LabelFg = seg.ValueFg = null;
+            }
+        }
+        for (int r = 0; r < Theme.Rows.Count; r++)
+            Theme.Rows[r].SeparatorFg =
+                source.Rows[Math.Min(r, source.Rows.Count - 1)].SeparatorFg;
+        Notify();
+    }
+
     public void DismissRemix() { RemixedFromLink = false; Changed?.Invoke(); }
 
     public void ReplaceTheme(Theme theme, bool remixed = false)

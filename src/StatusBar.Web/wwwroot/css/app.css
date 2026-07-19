@@ -182,6 +182,17 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .panel-title { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.22em;
   color:var(--gib-magenta); }
 
+/* Style-panel breadcrumb: always-visible path with "status bar" as the fixed root. */
+.crumbs { gap:6px; }
+.crumbtrail { display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0; }
+.crumb { font-family:var(--mono); font-size:11px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.18em; background:transparent; border:none; padding:2px 0;
+  color:var(--gib-faint); }
+button.crumb { cursor:pointer; }
+button.crumb:hover { color:var(--gib-cyan); }
+.crumb.on { color:var(--gib-magenta); }
+.csep { color:var(--gib-dim); font-size:10px; }
+
 /* ── Element palette ────────────────────────────────────────────────────── */
 .rail-search { display:flex; align-items:center; gap:8px; background:var(--gib-surface);
   border:1px solid var(--gib-line); border-radius:2px; padding:0 10px; margin:10px 14px;
@@ -302,6 +313,9 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .attr:hover { color:var(--gib-bright); border-color:var(--gib-cyan); }
 .attr.on { color:var(--gib-cyan); border-color:var(--gib-cyan);
   background:rgba(0,229,255,.1); box-shadow:0 0 8px rgba(0,229,255,.35); }
+.attr:disabled { opacity:.3; cursor:default; }
+.attr:disabled:hover { color:var(--gib-dim); border-color:var(--gib-line); }
+.rowmove { display:flex; gap:6px; }
 
 .iconrow { display:flex; align-items:center; gap:10px; }
 .icochip { width:36px; height:36px; display:flex; align-items:center; justify-content:center;
@@ -510,12 +524,13 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .gallery h1 { font-size:26px; text-transform:uppercase; letter-spacing:.06em; color:var(--gib-bright);
   margin-bottom:6px; }
 .gallery .sub { color:var(--gib-dim); font-size:13px; margin-bottom:22px; }
-.tplgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:18px; }
+/* One card per row: bars compose at 80 columns and get the full width to breathe. */
+.tplgrid { display:flex; flex-direction:column; gap:18px; }
 .tplcard { background:var(--gib-bg); border:1px solid var(--gib-line); border-radius:3px;
   display:flex; flex-direction:column; overflow:hidden; }
 .tplcard:hover { border-color:var(--gib-cyan); box-shadow:0 0 14px rgba(0,229,255,.15); }
-.tplterm { padding:14px 12px; overflow:hidden; border-bottom:1px solid var(--gib-line); }
-.ansiline { font-family:var(--mono); font-size:11px; line-height:1.6; white-space:pre; }
+.tplterm { padding:14px 14px; overflow-x:auto; border-bottom:1px solid var(--gib-line); }
+.ansiline { font-family:var(--mono); font-size:13px; line-height:1.55; white-space:pre; }
 .tplmeta { padding:10px 12px 0; display:flex; flex-direction:column; gap:3px; }
 .tplmeta b { color:var(--gib-bright); font-size:13px; font-weight:600; }
 .tplbtns { display:flex; gap:8px; padding:12px; margin-top:auto; }
@@ -523,7 +538,26 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .tplcard.tplsubmit { align-items:flex-start; justify-content:center; gap:12px; padding:18px;
   border-style:dashed; }
 .tplcard.tplsubmit:hover { border-color:var(--gib-claude); box-shadow:0 0 14px rgba(255,138,92,.15); }
+.tplpalette { display:flex; flex-wrap:wrap; gap:5px; padding:10px 12px 0; }
+.swatch { width:18px; height:18px; border-radius:2px; border:1px solid var(--gib-line); flex:none; }
+.tpldesc { color:var(--gib-dim); font-size:12px; line-height:1.5; }
 .dlrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+
+/* ── Template submit modal (the icon browser owns .modal — this is its own) ─ */
+.modalback { position:fixed; inset:0; z-index:90; background:rgba(4,6,10,.72);
+  display:flex; align-items:center; justify-content:center; padding:16px; }
+.submodal { width:min(460px, 92vw); background:var(--gib-surface); border:1px solid var(--gib-cyan);
+  border-radius:3px; box-shadow:0 0 28px rgba(0,229,255,.22); padding:18px;
+  display:flex; flex-direction:column; gap:12px; }
+.submodal label { display:flex; flex-direction:column; gap:6px; font-size:10px;
+  text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint); }
+.submodal label .opt { text-transform:none; letter-spacing:.06em; color:var(--gib-dim); }
+.submodal input, .submodal textarea { font-size:13px; color:var(--gib-text); background:var(--gib-bg);
+  border:1px solid var(--gib-line); border-radius:2px; padding:7px 9px;
+  font-family:var(--mono); resize:vertical; }
+.submodal input:focus, .submodal textarea:focus { border-color:var(--gib-cyan); outline:none; }
+.submodal .suberr { color:var(--gib-red); }
+.modalbtns { display:flex; gap:10px; justify-content:flex-end; }
 
 .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:80;
   display:inline-flex; align-items:center; gap:10px; font-size:12px;

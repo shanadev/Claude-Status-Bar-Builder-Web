@@ -6,13 +6,31 @@
 @implements IDisposable
 
 <div class="panel">
+@* Breadcrumb = where-am-I + one-click jump to any level. "status bar" is always
+   reachable — that's the global settings panel (was only findable by deselecting). *@
+<div class="panel-head crumbs">
+    <span class="crumbtrail">
+        <button type="button" class="crumb @(State.SelectedRow is null ? "on" : null)"
+                title="status bar settings — name &amp; terminal background"
+                @onclick="() => State.SelectNone()">status bar</button>
+        @if (State.SelectedRow is Row bcRow)
+        {
+            <span class="csep">&#9656;</span>
+            <button type="button" class="crumb @(State.Selected is null ? "on" : null)"
+                    title="row settings — separators, end caps, position"
+                    @onclick="() => State.SelectRow(bcRow)">row @(State.Theme.Rows.IndexOf(bcRow) + 1)</button>
+            @if (State.Selected is Segment bcSeg)
+            {
+                <span class="csep">&#9656;</span>
+                <span class="crumb on">@ElementRegistry.Get(bcSeg.Element).Name</span>
+            }
+        }
+    </span>
+    <span class="t-micro" title="the Escape key steps selection back out one level at a time">esc backs out</span>
+</div>
 @if (State.Selected is Segment seg && State.SelectedRow is Row row)
 {
     var def = ElementRegistry.Get(seg.Element);
-    <div class="panel-head">
-        <span class="panel-title">Style</span>
-        <span class="p-elem">@def.Name</span>
-    </div>
 
     @if (seg.Element == ElementKind.Spacer)
     {
@@ -243,10 +261,6 @@
 else if (State.SelectedRow is Row selRow)
 {
     int rowNum = State.Theme.Rows.IndexOf(selRow) + 1;
-    <div class="panel-head">
-        <span class="panel-title">Row @rowNum</span>
-        <span class="p-elem">separators &amp; end caps</span>
-    </div>
 
     <div class="sect">
         <div class="s-lab"><span>separators</span></div>
@@ -277,19 +291,26 @@ else if (State.SelectedRow is Row selRow)
     </div>
 
     <div class="sect">
+        <div class="s-lab"><span>arrange</span></div>
+        <div class="selrow">
+            <span class="k">move row</span>
+            <span class="rowmove">
+                <button type="button" class="attr" title="move this row up" disabled="@(rowNum == 1)"
+                        @onclick="() => State.MoveRow(selRow, -1)">&#9650;</button>
+                <button type="button" class="attr" title="move this row down"
+                        disabled="@(rowNum == State.Theme.Rows.Count)"
+                        @onclick="() => State.MoveRow(selRow, +1)">&#9660;</button>
+            </span>
+        </div>
+    </div>
+
+    <div class="sect">
         <p class="t-small">palette clicks and drops add elements to this row &#183; a row with no
         elements renders as a blank line</p>
-        <button type="button" class="addlink" style="margin-top:8px;"
-                @onclick="() => State.ClearSelection()">&#8592; status bar settings</button>
     </div>
 }
 else
 {
-    <div class="panel-head">
-        <span class="panel-title">Status Bar</span>
-        <span class="p-elem">nothing selected</span>
-    </div>
-
     <div class="sect">
         <div class="s-lab"><span>status bar name</span></div>
         <div class="selrow">

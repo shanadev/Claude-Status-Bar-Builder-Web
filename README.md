@@ -4,8 +4,8 @@
 
 Design your [Claude Code](https://code.claude.com) status line **in the browser** — click
 elements together, style every piece with truecolor and powerline separators, watch a real
-terminal preview react to sample data, then jack out with an installer. No accounts, no
-backend: **the theme travels in the link**.
+terminal preview react to sample data, then jack out with an installer. No accounts:
+**the theme travels in the link**.
 
 **Live site:** [claude-status-bar-builder-web-production.up.railway.app](https://claude-status-bar-builder-web-production.up.railway.app)
 
@@ -14,7 +14,8 @@ backend: **the theme travels in the link**.
 ## How it works
 
 The builder runs entirely client-side (Blazor WebAssembly). Your design is a **theme JSON**;
-share links carry it compressed in the URL fragment, so nothing is ever uploaded. On your
+share links carry it compressed in the URL fragment, so nothing is uploaded unless you
+deliberately submit your bar to the templates gallery. On your
 machine, a small console renderer reads the session JSON Claude Code pipes to your status
 line command on stdin, applies the theme, and prints ANSI rows. The browser preview and the
 real renderer share the same rendering code (`StatusBar.Core`), so what you see on the site
@@ -48,6 +49,10 @@ is exactly what your terminal gets.
   watch thresholds, gradients, and hide-rules react before anything touches your config.
 - **Share links** — the whole theme, deflate-compressed into `#t=…`. Open someone's link and
   remix it; your work-in-progress also autosaves locally.
+- **Templates gallery** — approved community bars at `/templates`, live-rendered from their
+  actual theme JSON with their color palette shown as swatches. Jack one in whole, **steal
+  just the colors** onto your own layout, or copy its share link. Submitting yours is one
+  click — name, author, optional description, no account needed.
 - **Fast & graceful renderer** — self-contained single binary, git info cached (5s TTL,
   keyed by session), absent fields hide their segments instead of erroring, and running it
   by hand shows a demo render instead of hanging on stdin.
@@ -90,6 +95,17 @@ cmd /c "type test-input.json | renderer.exe"     # Windows: cmd's type, not a PS
 cat test-input.json | ./renderer                 # macOS / Linux
 ```
 
+## Templates
+
+The [gallery](https://claude-status-bar-builder-web-production.up.railway.app/templates)
+holds approved community bars, one full-width card each, rendered live at 80 columns from
+the theme JSON itself. **Jack in** replaces your bar; **use this color palette** recolors
+the bar you're building without touching its layout; **copy link** shares it. Submissions
+go through the site's own moderated queue (no GitHub account, nothing public until
+approved): a maintainer runs `dotnet run --project tools/StatusBar.Review`, sees each
+pending bar rendered in the console, approves or rejects, and approved entries append to
+`src/StatusBar.Web/wwwroot/templates.json` — one push and they're live.
+
 ## Build & run from source
 
 Needs the [.NET 10 SDK](https://dotnet.microsoft.com/).
@@ -97,12 +113,15 @@ Needs the [.NET 10 SDK](https://dotnet.microsoft.com/).
 ```
 git clone https://github.com/shanadev/Claude-Status-Bar-Builder-Web
 cd Claude-Status-Bar-Builder-Web
-dotnet run --project src/StatusBar.Web --launch-profile http   # → http://localhost:5153
+dotnet run --project src/StatusBar.Server --launch-profile http   # → http://localhost:5153
 ```
 
-The site is a static Blazor WASM app; `Dockerfile` builds the production image (nginx,
-gzip_static, SPA fallback — the container binds `$PORT`, so it deploys to Railway or any
-container host as-is).
+`StatusBar.Server` serves the WASM site and the template-submission API together (the dev
+profile ships a `local-dev-token` admin token so the whole submit → review loop works on
+localhost). `Dockerfile` builds the production image: the server published onto the aspnet
+runtime — the container binds `$PORT`, so it deploys to Railway or any container host
+as-is. The submission queue wants persistence: mount a volume at `/data` and set
+`SUBMISSIONS_PATH=/data/submissions.jsonl` plus your own `SUBMIT_ADMIN_TOKEN`.
 
 ## Project layout
 
@@ -111,6 +130,8 @@ container host as-is).
 | `src/StatusBar.Core` | Theme model, element registry, ANSI/segment rendering, composer — shared by site and renderer |
 | `src/StatusBar.Renderer` | Console exe Claude Code runs: stdin JSON → ANSI rows (plus git gathering & caching) |
 | `src/StatusBar.Web` | The site: Blazor WASM builder, xterm.js preview, export flows |
+| `src/StatusBar.Server` | ASP.NET Core host: serves the site + the template-submission queue API |
+| `tools/StatusBar.Review` | Maintainer console: renders queued submissions, yea/nay, appends approvals to `templates.json`, publishes |
 | `src/StatusBar.Builder` | The original Windows WPF app ([maintained separately](https://github.com/shanadev/Claude-Status-Bar-Builder), kept here for shared history) |
 | `design/cards` | Full Gibson design-system cards (source of truth for the look) |
 | `INSTALL.md` | Canonical install guide — written so Claude Code can follow it |

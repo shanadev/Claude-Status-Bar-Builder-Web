@@ -429,6 +429,8 @@ FodyWeavers.xsd
 *.msp
 
 # ── Project-specific ─────────────────────────────────────
+# Local template-submission queue written by StatusBar.Server dev runs
+src/StatusBar.Server/data/
 # Claude session working notes (private)
 memory/
 # Personal theme files the Builder manages (user data, not source)

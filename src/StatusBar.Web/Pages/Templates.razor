@@ -1,8 +1,10 @@
 @* Hack the Claude Status Bar — templates gallery: approved status bars, live-rendered
-   from their theme JSON (no screenshots — the preview IS the bar).
+   from their theme JSON (no screenshots — the preview IS the bar). Submissions go to
+   the site's own queue (POST /api/submit), reviewed with tools/StatusBar.Review.
    Copyright (C) 2026 Stephen Shanafelt
    SPDX-License-Identifier: GPL-3.0-only *@
 @page "/templates"
+@using System.Net.Http.Json
 @using System.Text.Json
 @inject HttpClient Http
 @inject BuilderState State
@@ -15,7 +17,7 @@
 <div class="gallery">
     <h1>Templates</h1>
     <p class="sub">Approved status bars from fellow console cowboys &#8212; rendered live from
-        their actual theme JSON. Jack one in and make it yours.
+        their actual theme JSON. Jack one in whole, or steal just the colors.
         <a href="build">&#8592; back to the builder</a></p>
 
     @if (_error)
@@ -29,6 +31,12 @@
     else
     {
         <div class="tplgrid">
+            <div class="tplcard tplsubmit">
+                <p class="t-h2">built something worth sharing?</p>
+                <button type="button" class="btn brand" @onclick="OpenSubmit">submit your current bar</button>
+                <p class="t-small">sends the bar in your builder in for review &#8212; no account
+                    needed &#8212; approved bars land here with your name on them</p>
+            </div>
             @foreach (var card in _cards)
             {
                 var localCard = card;
@@ -37,29 +45,69 @@
                     <div class="tplmeta">
                         <b>@localCard.Name</b>
                         <span class="t-micro">by @localCard.Author &#183; @localCard.Date</span>
+                        @if (localCard.Description.Length > 0)
+                        {
+                            <span class="tpldesc">@localCard.Description</span>
+                        }
+                    </div>
+                    <div class="tplpalette" title="this bar's color palette">
+                        @foreach (var c in localCard.Palette)
+                        {
+                            <span class="swatch" style="background:@c" title="@c"></span>
+                        }
                     </div>
                     <div class="tplbtns">
                         <button type="button" class="btn go" @onclick="() => JackIn(localCard)">jack in</button>
+                        <button type="button" class="btn ghost" @onclick="() => UsePalette(localCard)">use this color palette</button>
                         <button type="button" class="btn ghost" @onclick="() => CopyLink(localCard)">copy link</button>
                     </div>
                 </div>
             }
-            <div class="tplcard tplsubmit">
-                <p class="t-h2">built something worth sharing?</p>
-                <a class="btn brand" href="@TemplateSubmit.IssueUrl(State.Theme, Nav.BaseUri)"
-                   target="_blank" rel="noopener">submit your current bar</a>
-                <p class="t-small">opens a prefilled GitHub issue with your bar's share link &#8212;
-                    approved submissions land here with your name on them</p>
-            </div>
         </div>
     }
 </div>
 
+@if (_showSubmit)
+{
+    <div class="modalback" @onclick="CloseSubmit">
+        <div class="submodal" @onclick:stopPropagation>
+            <div class="s-lab"><span>submit as template</span></div>
+            <p class="t-small">submits the status bar currently in your builder for review.</p>
+            <label>bar name
+                <input type="text" maxlength="60" spellcheck="false"
+                       @bind="_subName" @bind:event="oninput" /></label>
+            <label>author / handle
+                <input type="text" maxlength="60" spellcheck="false"
+                       @bind="_subAuthor" @bind:event="oninput" /></label>
+            <label>description <span class="opt">(optional, 255 max)</span>
+                <textarea maxlength="255" rows="3" spellcheck="false"
+                          @bind="_subDesc" @bind:event="oninput"></textarea></label>
+            @if (_subError is not null)
+            {
+                <p class="t-small suberr">@_subError</p>
+            }
+            <div class="modalbtns">
+                <button type="button" class="btn brand" disabled="@_submitting" @onclick="SubmitBar">
+                    @(_submitting ? "sending…" : "send it")</button>
+                <button type="button" class="btn ghost" @onclick="CloseSubmit">cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    sealed record TplCard(string Name, string Author, string Date, string Bg, MarkupString Preview, string ThemeJson);
+    sealed record TplCard(string Name, string Author, string Date, string Description, string Bg,
+        List<string> Palette, MarkupString Preview, string ThemeJson);
 
     List<TplCard>? _cards;
     bool _error;
+
+    bool _showSubmit;
+    bool _submitting;
+    string _subName = "";
+    string _subAuthor = "";
+    string _subDesc = "";
+    string? _subError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,8 +116,8 @@
         {
             using var doc = JsonDocument.Parse(await Http.GetStringAsync("templates.json"));
             var ctx = new SampleData().Build();
-            // Narrow enough that flex-spacer bars show both ends inside a gallery card.
-            ctx.Computed.Columns = 48;
+            // Cards are full-width rows now — compose at a standard terminal's 80 columns.
+            ctx.Computed.Columns = 80;
             var cards = new List<TplCard>();
             foreach (var el in doc.RootElement.GetProperty("templates").EnumerateArray())
             {
@@ -84,13 +132,33 @@
                     el.TryGetProperty("name", out var n) ? n.GetString() ?? theme.Name : theme.Name,
                     el.TryGetProperty("author", out var a) ? a.GetString() ?? "anonymous" : "anonymous",
                     el.TryGetProperty("date", out var d) ? d.GetString() ?? "" : "",
+                    el.TryGetProperty("description", out var ds) ? ds.GetString() ?? "" : "",
                     Ansi.ToHex(theme.Background) ?? "#101014",
+                    ExtractPalette(theme),
                     new MarkupString(AnsiHtml.RowsToHtml(Composer.Compose(theme, ctx))),
                     theme.ToJson()));
             }
             _cards = cards;
         }
         catch { _error = true; }
+    }
+
+    // Background first, then segment colors in bar order — same order ApplyPalette cycles them.
+    static List<string> ExtractPalette(Theme theme)
+    {
+        var colors = new List<string>();
+        void Add(string? c)
+        {
+            if (Ansi.ToHex(c) is string hex && !colors.Contains(hex)) colors.Add(hex);
+        }
+        Add(theme.Background);
+        foreach (var row in theme.Rows)
+            foreach (var seg in row.Segments)
+            {
+                Add(seg.Bg);
+                Add(seg.Fg);
+            }
+        return colors.Take(12).ToList();
     }
 
     async Task JackIn(TplCard card)
@@ -102,6 +170,15 @@
         Nav.NavigateTo("build");
     }
 
+    async Task UsePalette(TplCard card)
+    {
+        var ok = await JS.InvokeAsync<bool>("confirm",
+            $"Recolor your current status bar with “{card.Name}”'s palette? Your elements and layout stay.");
+        if (!ok) return;
+        State.ApplyPalette(Theme.FromJson(card.ThemeJson));
+        Nav.NavigateTo("build");
+    }
+
     async Task CopyLink(TplCard card)
     {
         var link = Nav.BaseUri + "#t=" + ThemeCodec.Encode(Theme.FromJson(card.ThemeJson));
@@ -109,4 +186,47 @@
         if (ok) Toasts.Show("✓ LINK COPIED", "spread the warez");
         else Toasts.Show("copy failed — select the text and copy manually", error: true);
     }
+
+    void OpenSubmit()
+    {
+        _subName = State.Theme.Name;
+        _subError = null;
+        _showSubmit = true;
+    }
+
+    void CloseSubmit() => _showSubmit = false;
+
+    async Task SubmitBar()
+    {
+        _subError = null;
+        var name = _subName.Trim();
+        var author = _subAuthor.Trim();
+        if (name.Length == 0) { _subError = "give the bar a name"; return; }
+        if (author.Length == 0) { _subError = "give yourself a handle"; return; }
+        _submitting = true;
+        try
+        {
+            var resp = await Http.PostAsJsonAsync("api/submit", new
+            {
+                name,
+                author,
+                description = _subDesc.Trim(),
+                t = ThemeCodec.Encode(State.Theme),
+            });
+            if (resp.IsSuccessStatusCode)
+            {
+                _showSubmit = false;
+                Toasts.Show("✓ SENT FOR REVIEW", "the gatekeeper will judge fairly");
+            }
+            else
+            {
+                var err = await resp.Content.ReadFromJsonAsync<ErrBody>();
+                _subError = err?.Error ?? $"submit failed ({(int)resp.StatusCode})";
+            }
+        }
+        catch { _subError = "couldn't reach the server — try again in a bit"; }
+        finally { _submitting = false; }
+    }
+
+    sealed record ErrBody(string? Error);
 }

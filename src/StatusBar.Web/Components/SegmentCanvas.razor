@@ -89,7 +89,7 @@
                     @ondragenter="() => SetHover(localRow, localRow.Segments.Count)"
                     @ondragover:preventDefault
                     @ondrop="() => DropAt(localRow, localRow.Segments.Count)">
-                @(Dragging ? "+ drop here" : localRow.Segments.Count == 0 ? "+ add elements from the palette" : "+ drop here")
+                @(Dragging ? "+ drop here" : localRow.Segments.Count == 0 ? "+ add elements — or leave empty for a blank line" : "+ drop here")
             </button>
         </div>
     }
