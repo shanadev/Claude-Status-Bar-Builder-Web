@@ -472,6 +472,12 @@ button.crumb:hover { color:var(--gib-cyan); }
   background:transparent; font-family:var(--mono); }
 .fchip:hover { color:var(--gib-bright); border-color:var(--gib-cyan); }
 .fchip.on { color:var(--gib-cyan); border-color:var(--gib-cyan); background:rgba(0,229,255,.08); }
+.pasteany { margin-left:auto; width:170px; font:13px var(--mono); color:var(--gib-bright);
+  background:var(--gib-surface); border:1px solid var(--gib-line); border-radius:2px;
+  padding:4px 9px; }
+.pasteany::placeholder { color:var(--gib-faint); font-size:11px; }
+.pasteany:focus { outline:none; border-color:var(--gib-cyan);
+  box-shadow:0 0 10px rgba(0,229,255,.25); }
 .icongrid { flex:1; overflow-y:auto; padding:0 14px 12px; min-height:120px;
   scrollbar-width:thin; scrollbar-color:var(--gib-line) transparent; }
 .icongrid .grow { display:grid; grid-template-columns:repeat(8, 1fr); gap:5px; margin-bottom:5px; }

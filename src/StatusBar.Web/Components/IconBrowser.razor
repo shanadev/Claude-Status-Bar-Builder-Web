@@ -23,10 +23,14 @@
                 <button type="button" class="fchip @(_filter == "all" ? "on" : null)" @onclick="@(() => SetFilter("all"))">all</button>
                 <button type="button" class="fchip @(_filter == "nf" ? "on" : null)" @onclick="@(() => SetFilter("nf"))">nerd font</button>
                 <button type="button" class="fchip @(_filter == "emoji" ? "on" : null)" @onclick="@(() => SetFilter("emoji"))">emoji</button>
+                <button type="button" class="fchip @(_filter == "unicode" ? "on" : null)" @onclick="@(() => SetFilter("unicode"))">unicode</button>
                 @if (_recents.Count > 0)
                 {
                     <button type="button" class="fchip @(_filter == "recent" ? "on" : null)" @onclick="@(() => SetFilter("recent"))">recent</button>
                 }
+                <input type="text" class="pasteany" placeholder="or paste any character"
+                       title="paste or type any character — the first one becomes the icon"
+                       value="@_pasteText" spellcheck="false" @oninput="OnPasteInput" />
             </div>
             @if (_selected is { IsNerdFont: true } && !_nfHintDismissed)
             {
@@ -74,6 +78,7 @@
 @code {
     bool _visible, _loading, _nfHintDismissed;
     string _search = "";
+    string _pasteText = "";
     string _filter = "all";
     IconEntry? _selected;
     List<string> _recents = new();
@@ -98,6 +103,7 @@
     {
         _visible = true;
         _selected = null;
+        _pasteText = "";
         _focusPending = true;
         _nfHintDismissed = await JS.InvokeAsync<string?>("sbGet", "sbb-nfhint") == "1";
         var recentsJson = await JS.InvokeAsync<string?>("sbGet", "sbb-recent-icons");
@@ -140,6 +146,19 @@
     void OnSearchInput(ChangeEventArgs e) { _search = e.Value?.ToString() ?? ""; Refilter(); }
     void SetFilter(string value) { _filter = value; Refilter(); }
 
+    /// <summary>The escape hatch: any pasted/typed text becomes an icon candidate — first
+    /// grapheme cluster only, so ZWJ sequences and flags survive intact.</summary>
+    void OnPasteInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? "";
+        if (text.Length == 0) { _pasteText = ""; return; }
+        var cluster = System.Globalization.StringInfo.GetNextTextElement(text);
+        _pasteText = cluster; // the box always shows exactly what "Use icon" will insert
+        var icons = Catalog.Icons ?? (IReadOnlyList<IconEntry>)Array.Empty<IconEntry>();
+        _selected = icons.FirstOrDefault(i => i.Char == cluster)
+            ?? new IconEntry { Char = cluster, Name = "pasted character", Group = "Unicode — pasted" };
+    }
+
     void Refilter()
     {
         var icons = Catalog.Icons ?? (IReadOnlyList<IconEntry>)Array.Empty<IconEntry>();
@@ -147,6 +166,7 @@
         {
             "nf" => icons.Where(i => i.IsNerdFont),
             "emoji" => icons.Where(i => i.IsEmoji),
+            "unicode" => icons.Where(i => !i.IsNerdFont && !i.IsEmoji),
             "recent" => _recents.Select(c => icons.FirstOrDefault(i => i.Char == c)).OfType<IconEntry>(),
             _ => icons,
         };
@@ -181,6 +201,7 @@
         await JS.InvokeVoidAsync("sbSet", "sbb-nfhint", "1");
     }
 
+    // All codepoints, so ZWJ sequences from the paste box read honestly (U+1F468 U+200D …).
     static string Codepoint(IconEntry entry) =>
-        entry.Char.Length == 0 ? "" : "U+" + char.ConvertToUtf32(entry.Char, 0).ToString("X4");
+        string.Join(" ", entry.Char.EnumerateRunes().Select(r => "U+" + r.Value.ToString("X4")));
 }
