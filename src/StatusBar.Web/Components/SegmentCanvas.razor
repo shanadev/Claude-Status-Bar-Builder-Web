@@ -3,12 +3,19 @@
    Copyright (C) 2026 Stephen Shanafelt
    SPDX-License-Identifier: GPL-3.0-only *@
 @inject BuilderState State
+@inject IJSRuntime JS
 @implements IDisposable
 
 <div class="panel canvas" tabindex="0" @onkeydown="OnKey" @onkeydown:stopPropagation="false">
     <div class="panel-head">
         <span class="panel-title">Row Editor</span>
-        <span class="p-elem">click a chip or row &#183; drag to arrange</span>
+        <span class="ph-side">
+            <span class="p-elem">click a chip or row &#183; drag to arrange</span>
+            <button type="button" class="wipebtn" @onclick="() => _showWipe = true">
+                <span class="w-main">wipe the Gibson</span>
+                <span class="w-sub">start a new status bar</span>
+            </button>
+        </span>
     </div>
     @{ var ctx = State.BuildContext(160); }
     @foreach (var (row, rowIdx) in State.Theme.Rows.Select((r, i) => (r, i)))
@@ -98,13 +105,39 @@
     </div>
 </div>
 
+@if (_showWipe)
+{
+    <div class="modalback" @onclick="() => _showWipe = false">
+        <div class="submodal" @onclick:stopPropagation>
+            <div class="s-lab"><span>wipe the Gibson</span></div>
+            <p class="t-small">this trashes the status bar you're building and racks up a blank
+            one in its place. no undo, no backup tapes &#8212; the garbage file is gone.</p>
+            <div class="modalbtns">
+                <button type="button" class="btn danger" @onclick="WipeIt">wipe it</button>
+                <button type="button" class="btn ghost" @onclick="() => _showWipe = false">cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
+    bool _showWipe;
     (Row Row, int Index)? _hover;
 
     bool Dragging => State.DragNewKind is not null || State.DragExisting is not null;
 
     protected override void OnInitialized() => State.Changed += StateHasChanged;
     public void Dispose() => State.Changed -= StateHasChanged;
+
+    /// <summary>Confirmed wipe: blank theme, selection cleared, cursor in the name box ready to type.</summary>
+    async Task WipeIt()
+    {
+        _showWipe = false;
+        var blank = new Theme { Name = "My New Status Bar" };
+        blank.Rows.Add(new Row());
+        State.ReplaceTheme(blank);
+        await JS.InvokeVoidAsync("sbFocusSelect", "theme-name", blank.Name);
+    }
 
     void StartDrag(Row row, Segment seg) => State.DragExisting = (row, seg);
 

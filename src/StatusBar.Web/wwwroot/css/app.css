@@ -63,6 +63,8 @@ h1:focus, h1:focus-visible, h1[tabindex]:focus-visible { outline:none; }
 .btn.go { color:#04060a; background:var(--gib-green); border-color:var(--gib-green);
   font-weight:700; box-shadow:0 0 12px rgba(0,255,102,.4); }
 .btn.go:hover { box-shadow:0 0 18px rgba(0,255,102,.65); }
+.btn.danger { color:var(--gib-red); border-color:var(--gib-red); }
+.btn.danger:hover { background:rgba(255,59,77,.08); box-shadow:0 0 14px rgba(255,59,77,.45); }
 .btn.ghost { color:var(--gib-dim); border-color:var(--gib-line); }
 .btn.ghost:hover { color:var(--gib-bright); border-color:var(--gib-cyan);
   background:rgba(0,229,255,.05); box-shadow:0 0 8px rgba(0,229,255,.3); }
@@ -223,6 +225,16 @@ button.crumb:hover { color:var(--gib-cyan); }
 /* ── Segment canvas ─────────────────────────────────────────────────────── */
 .canvas { padding:16px 18px; }
 .canvas .panel-head { margin:-16px -18px 14px; }
+.ph-side { display:flex; align-items:center; gap:12px; min-width:0; }
+.wipebtn { display:flex; flex-direction:column; align-items:flex-end; gap:2px; flex-shrink:0;
+  background:transparent; border:1px dashed var(--gib-line); border-radius:2px; padding:5px 10px;
+  cursor:pointer; font-family:var(--mono); transition:border-color .12s, box-shadow .12s; }
+.wipebtn .w-main { font-size:10px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.18em; color:var(--gib-dim); }
+.wipebtn .w-sub { font-size:9px; letter-spacing:.12em; color:var(--gib-faint); }
+.wipebtn:hover { border-color:var(--gib-red); border-style:solid;
+  box-shadow:0 0 10px rgba(255,59,77,.4); }
+.wipebtn:hover .w-main { color:var(--gib-red); text-shadow:0 0 6px rgba(255,59,77,.5); }
 .rowlab { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--gib-faint);
   margin:10px 0 8px 2px; display:flex; gap:10px; align-items:center; }
 .rowlab:first-child { margin-top:0; }
@@ -282,7 +294,7 @@ button.crumb:hover { color:var(--gib-cyan); }
 .sect:hover .s-lab .reset { visibility:visible; }
 .s-lab .reset:hover { color:var(--gib-cyan); }
 .p-elem { font-size:11px; color:var(--gib-dim); overflow:hidden; text-overflow:ellipsis;
-  white-space:nowrap; max-width:150px; }
+  white-space:nowrap; }
 
 .segctl { display:flex; border:1px solid var(--gib-line); border-radius:2px; overflow:hidden;
   margin-bottom:10px; }

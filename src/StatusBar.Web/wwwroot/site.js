@@ -33,6 +33,19 @@ window.sbSet = function (key, value) {
     } catch (e) { }
 };
 
+// Focus an input and pre-select its text. Retries across frames: the caller fires
+// this right after a state change, before Blazor has re-rendered the target. When
+// expectValue is given, waits until the input SHOWS it — the element may pre-exist
+// with the stale value, and Blazor's patch would collapse a too-early selection.
+window.sbFocusSelect = function (id, expectValue) {
+    var tries = 0;
+    (function attempt() {
+        var el = document.getElementById(id);
+        if (el && (expectValue == null || el.value === expectValue)) { el.focus(); el.select(); return; }
+        if (++tries < 40) requestAnimationFrame(attempt);
+    })();
+};
+
 window.sbReboot = function () {
     try { localStorage.removeItem('sbb-booted'); } catch (e) { }
     location.href = '/';
