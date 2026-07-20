@@ -24,7 +24,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using StatusBar.Core;
 
-const string DefaultSite = "https://claude-status-bar-builder-web-production.up.railway.app/";
+const string DefaultSite = "https://hackthestatusbar.dev/";
 
 Console.OutputEncoding = Encoding.UTF8;
 Native.TryEnableVt();

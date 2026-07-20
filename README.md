@@ -7,7 +7,7 @@ elements together, style every piece with truecolor and powerline separators, wa
 terminal preview react to sample data, then jack out with an installer. No accounts:
 **the theme travels in the link**.
 
-**Live site:** [claude-status-bar-builder-web-production.up.railway.app](https://claude-status-bar-builder-web-production.up.railway.app)
+**Live site:** [hackthestatusbar.dev](https://hackthestatusbar.dev)
 
 ![The builder: element palette, row editor, style panel, and a live terminal preview](docs/web-builder.png)
 
@@ -97,7 +97,7 @@ cat test-input.json | ./renderer                 # macOS / Linux
 
 ## Templates
 
-The [gallery](https://claude-status-bar-builder-web-production.up.railway.app/templates)
+The [gallery](https://hackthestatusbar.dev/templates)
 holds approved community bars, one full-width card each, rendered live at 80 columns from
 the theme JSON itself. **Jack in** replaces your bar; **use this color palette** recolors
 the bar you're building without touching its layout; **copy link** shares it. Submissions
