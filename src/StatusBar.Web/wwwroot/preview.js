@@ -33,6 +33,8 @@ function ensureTerm(font, bg) {
         term = null; fitAddon = null; webglAddon = null;
     }
     term = new Terminal({
+        // The unicode11 addon registers its provider through xterm's proposed API.
+        allowProposedApi: true,
         convertEol: true,
         disableStdin: true,
         cursorBlink: false,
@@ -52,7 +54,12 @@ function ensureTerm(font, bg) {
     });
     fitAddon = new FitAddon.FitAddon();
     term.loadAddon(fitAddon);
+    // Unicode 11 widths: emoji occupy 2 cells like real terminals. Core's Fmt.Width
+    // mirrors these exact tables (UnicodeWidth.cs) — alignment math depends on it.
+    term.loadAddon(new Unicode11Addon.Unicode11Addon());
+    term.unicode.activeVersion = '11';
     term.open(document.getElementById('term'));
+    window.sbbTerm = term; // test hook: verification scripts assert on the cell buffer
     try {
         webglAddon = new WebglAddon.WebglAddon();
         webglAddon.onContextLoss(function () {

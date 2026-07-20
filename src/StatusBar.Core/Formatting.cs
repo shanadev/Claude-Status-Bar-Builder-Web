@@ -78,16 +78,13 @@ public static class Fmt
     public static string Percent(double v, string? fmt) =>
         fmt == "1dp" ? v.ToString("0.0") + "%" : Math.Round(v).ToString("0") + "%";
 
-    /// <summary>Display-cell width heuristic: emoji ≈ 2 cells, everything else 1.</summary>
+    /// <summary>Display-cell width, from the same Unicode 11 tables the preview terminal uses
+    /// (UnicodeWidth) — ZWJ/variation selectors are width 0 there, so no special-casing.</summary>
     public static int Width(string s)
     {
         int w = 0;
         foreach (var rune in s.EnumerateRunes())
-        {
-            int v = rune.Value;
-            if (v == 0x200D || v == 0xFE0F) continue; // zero-width joiner, variation selector
-            w += v >= 0x1F000 ? 2 : 1;
-        }
+            w += UnicodeWidth.Of(rune.Value);
         return w;
     }
 }
