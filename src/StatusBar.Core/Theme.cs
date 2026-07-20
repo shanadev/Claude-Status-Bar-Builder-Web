@@ -93,6 +93,22 @@ public partial class BarOptions : ObservableObject
     [ObservableProperty] private string? _gradientFrom;
     [ObservableProperty] private string? _gradientTo;
     [ObservableProperty] private string? _brackets;   // two chars, e.g. "[]"
+    [ObservableProperty]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    private bool _tintTrack;                          // empty track = darkened zone color instead of EmptyFg
+    public ObservableCollection<BarStop>? Stops { get; set; } // positional zones; null = legacy gradient/solid
+}
+
+/// <summary>
+/// One positional color zone painted along the bar: covers cells whose center percent falls at or
+/// below UpTo (and above the previous stop's UpTo). To, when set, makes the zone a mini-gradient
+/// interpolated across the zone's cells; a single 0-100 From/To stop is exactly the legacy gradient.
+/// </summary>
+public partial class BarStop : ObservableObject
+{
+    [ObservableProperty] private double _upTo = 100;
+    [ObservableProperty] private string? _from;
+    [ObservableProperty] private string? _to;
 }
 
 /// <summary>When the segment's percent value is >= AtOrAbove, these colors override the segment's.</summary>

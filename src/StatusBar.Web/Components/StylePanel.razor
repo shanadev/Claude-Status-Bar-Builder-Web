@@ -222,8 +222,45 @@
                     </div>
                     <ColorField Label="fill" Value="@bar.FilledFg" ValueChanged="v => { bar.FilledFg = v; State.Notify(); }" />
                     <ColorField Label="empty" Value="@bar.EmptyFg" ValueChanged="v => { bar.EmptyFg = v; State.Notify(); }" />
-                    <ColorField Label="grad a" Value="@bar.GradientFrom" ValueChanged="v => { bar.GradientFrom = v; State.Notify(); }" />
-                    <ColorField Label="grad b" Value="@bar.GradientTo" ValueChanged="v => { bar.GradientTo = v; State.Notify(); }" />
+                    @if (bar.Stops is not { Count: > 0 })
+                    {
+                        <ColorField Label="grad a" Value="@bar.GradientFrom" ValueChanged="v => { bar.GradientFrom = v; State.Notify(); }" />
+                        <ColorField Label="grad b" Value="@bar.GradientTo" ValueChanged="v => { bar.GradientTo = v; State.Notify(); }" />
+                    }
+                    <div class="s-lab"><span>color zones</span></div>
+                    <div class="zonechips">
+                        <button type="button" class="zchip" title="3 zones: green to 60%, amber to 85%, red to 100%"
+                                style="background:linear-gradient(90deg,#9ece6a 0 60%,#e0af68 60% 85%,#f7768e 85% 100%)"
+                                @onclick="() => ApplyZonePreset(bar, PresetGreenAmberRed)">grn&#183;amb&#183;red</button>
+                        <button type="button" class="zchip" title="6 rainbow zones"
+                                style="background:linear-gradient(90deg,#f7768e,#ff9e64,#e0af68,#9ece6a,#7aa2f7,#bb9af7)"
+                                @onclick="() => ApplyZonePreset(bar, PresetRainbow)">rainbow</button>
+                    </div>
+                    @if (bar.Stops is { } zstops)
+                    {
+                        @foreach (var zs in zstops)
+                        {
+                            var z = zs;
+                            <div class="threshrow">
+                                <span class="t-small">up to</span>
+                                <input type="number" min="1" max="100" value="@z.UpTo"
+                                       @onchange="e => { if (double.TryParse(e.Value?.ToString(), out var d)) z.UpTo = Math.Clamp(d, 1, 100); CommitZoneOrder(bar); }" />
+                                <span class="t-small">%</span>
+                                <button type="button" class="x" title="remove zone"
+                                        @onclick="() => { zstops.Remove(z); if (zstops.Count == 0) bar.Stops = null; State.Notify(); }">&#215;</button>
+                            </div>
+                            <ColorField Label="from" Value="@z.From" ValueChanged="v => { z.From = v; State.Notify(); }" />
+                            <ColorField Label="to" Value="@z.To" ValueChanged="v => { z.To = v; State.Notify(); }" />
+                        }
+                    }
+                    <button type="button" class="addlink" @onclick="() => AddZone(bar)">+ add zone</button>
+                    <div class="selrow">
+                        <span class="k">track</span>
+                        <button type="button" class="toggle @(bar.TintTrack ? "on" : null)"
+                                @onclick="() => { bar.TintTrack = !bar.TintTrack; State.Notify(); }">
+                            <span class="tk"></span>tint with zone color
+                        </button>
+                    </div>
                 }
             </div>
         }
@@ -380,6 +417,62 @@ else
     void AddStop(Segment seg)
     {
         seg.Thresholds.Add(new ThresholdRule { AtOrAbove = 70, Fg = "#ffb300" });
+        State.Notify();
+    }
+
+    static readonly (double UpTo, string From)[] PresetGreenAmberRed =
+        { (60, "#9ece6a"), (85, "#e0af68"), (100, "#f7768e") };
+    static readonly (double UpTo, string From)[] PresetRainbow =
+        { (17, "#f7768e"), (33, "#ff9e64"), (50, "#e0af68"), (67, "#9ece6a"), (83, "#7aa2f7"), (100, "#bb9af7") };
+    static readonly string[] ZoneAccents = { "#9ece6a", "#e0af68", "#f7768e", "#7aa2f7", "#bb9af7" };
+
+    void ApplyZonePreset(BarOptions bar, (double UpTo, string From)[] preset)
+    {
+        bar.Stops = new(preset.Select(p => new BarStop { UpTo = p.UpTo, From = p.From }));
+        bar.GradientFrom = bar.GradientTo = null;
+        State.Notify();
+    }
+
+    void AddZone(BarOptions bar)
+    {
+        if (bar.Stops is not { } stops)
+        {
+            bar.Stops = stops = new();
+            if (Ansi.IsSet(bar.GradientFrom) && Ansi.IsSet(bar.GradientTo))
+            {
+                // Migrate the legacy whole-bar gradient into its exact single-stop equivalent.
+                stops.Add(new BarStop { UpTo = 100, From = bar.GradientFrom, To = bar.GradientTo });
+                bar.GradientFrom = bar.GradientTo = null;
+            }
+            else
+            {
+                stops.Add(new BarStop { UpTo = 100, From = bar.FilledFg ?? ZoneAccents[0] });
+            }
+            State.Notify();
+            return;
+        }
+        // The previous last zone gives up the top half of its range to the new one.
+        if (stops.Count > 0 && stops[^1].UpTo >= 100)
+        {
+            double prev = stops.Count > 1 ? stops[^2].UpTo : 0;
+            stops[^1].UpTo = Math.Round(prev + (100 - prev) / 2);
+        }
+        stops.Add(new BarStop { UpTo = 100, From = ZoneAccents[stops.Count % ZoneAccents.Length] });
+        State.Notify();
+    }
+
+    // Keep the editor list in UpTo order (the renderer sorts anyway; the UI should match it).
+    void CommitZoneOrder(BarOptions bar)
+    {
+        if (bar.Stops is { } stops)
+        {
+            var sorted = stops.OrderBy(s => s.UpTo).ToList();
+            for (int i = 0; i < sorted.Count; i++)
+            {
+                int cur = stops.IndexOf(sorted[i]);
+                if (cur != i) stops.Move(cur, i);
+            }
+        }
         State.Notify();
     }
 

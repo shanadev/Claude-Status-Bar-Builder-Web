@@ -284,14 +284,7 @@ public static class SegmentRenderer
     static void AddBar(List<StyledRun> runs, BarOptions bar, double percent, Segment seg, string? effFg)
     {
         int width = Math.Max(1, bar.Width);
-        string? fill = bar.FilledFg ?? seg.ValueFg ?? effFg;
-        string? gradFrom = Ansi.ToHex(bar.GradientFrom);
-        string? gradTo = Ansi.ToHex(bar.GradientTo);
-        bool gradient = gradFrom is not null && gradTo is not null;
-
-        string? CellColor(int index) => gradient
-            ? Ansi.Lerp(gradFrom!, gradTo!, width <= 1 ? 0 : (double)index / (width - 1))
-            : fill;
+        string?[] cellFg = CellColors(bar, width, seg.ValueFg ?? effFg);
 
         double cellsExact = Math.Clamp(percent, 0, 100) / 100.0 * width;
         int full = (int)Math.Floor(cellsExact);
@@ -302,19 +295,72 @@ public static class SegmentRenderer
 
         int cell = 0;
         for (; cell < full; cell++)
-            runs.Add(new StyledRun(bar.FilledChar, CellColor(cell)));
+            runs.Add(new StyledRun(bar.FilledChar, cellFg[cell]));
 
         if (cell < width && bar.Smooth && bar.FilledChar == "█")
         {
             int e = (int)Math.Round(frac * 8);
-            if (e >= 8) { runs.Add(new StyledRun("█", CellColor(cell))); cell++; }
-            else if (e > 0) { runs.Add(new StyledRun(Eighths[e], CellColor(cell))); cell++; }
+            if (e >= 8) { runs.Add(new StyledRun("█", cellFg[cell])); cell++; }
+            else if (e > 0) { runs.Add(new StyledRun(Eighths[e], cellFg[cell])); cell++; }
         }
 
         for (; cell < width; cell++)
-            runs.Add(new StyledRun(bar.EmptyChar, bar.EmptyFg));
+            runs.Add(new StyledRun(bar.EmptyChar,
+                bar.TintTrack ? Dimmed(cellFg[cell]) ?? bar.EmptyFg : bar.EmptyFg));
 
         if (bar.Brackets is { Length: >= 2 })
             runs.Add(new StyledRun(bar.Brackets[1].ToString(), seg.ValueFg ?? effFg));
     }
+
+    /// <summary>
+    /// The filled color of every cell, resolved up front: positional zones when Stops exist,
+    /// else the legacy whole-bar gradient, else solid fill. Zone membership goes by cell-center
+    /// percent; a zone's mini-gradient spans its own cells endpoint-to-endpoint, so a single
+    /// 0-100 stop reproduces the legacy index/(width-1) gradient exactly.
+    /// </summary>
+    static string?[] CellColors(BarOptions bar, int width, string? fallback)
+    {
+        var colors = new string?[width];
+        string? solid = bar.FilledFg ?? fallback;
+
+        var stops = bar.Stops?.Where(s => Ansi.IsSet(s.From)).OrderBy(s => s.UpTo).ToList();
+        if (stops is not { Count: > 0 }
+            && Ansi.ToHex(bar.GradientFrom) is string gf && Ansi.ToHex(bar.GradientTo) is string gt)
+            stops = new List<BarStop> { new() { UpTo = 100, From = gf, To = gt } };
+        if (stops is not { Count: > 0 })
+        {
+            Array.Fill(colors, solid);
+            return colors;
+        }
+
+        var zone = new int[width];
+        var firstCell = new int[stops.Count];
+        var lastCell = new int[stops.Count];
+        Array.Fill(firstCell, -1);
+        for (int i = 0; i < width; i++)
+        {
+            double center = (i + 0.5) * 100.0 / width;
+            int z = stops.FindIndex(s => center <= s.UpTo);
+            zone[i] = z < 0 ? stops.Count - 1 : z;
+            if (firstCell[zone[i]] < 0) firstCell[zone[i]] = i;
+            lastCell[zone[i]] = i;
+        }
+
+        for (int i = 0; i < width; i++)
+        {
+            var stop = stops[zone[i]];
+            string? fromHex = Ansi.ToHex(stop.From);
+            string? toHex = Ansi.ToHex(stop.To);
+            if (fromHex is null || toHex is null) { colors[i] = stop.From; continue; }
+            int first = firstCell[zone[i]], last = lastCell[zone[i]];
+            double t = last == first ? 0 : (double)(i - first) / (last - first);
+            colors[i] = Ansi.Lerp(fromHex, toHex, t);
+        }
+        return colors;
+    }
+
+    // Track tint: the cell's zone color pulled most of the way to black, so the unfilled
+    // stretch shows the zones without competing with the fill. Null when no RGB to tint.
+    static string? Dimmed(string? spec) =>
+        Ansi.ToHex(spec) is string hex ? Ansi.Lerp(hex, "#000000", 0.65) : null;
 }

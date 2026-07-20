@@ -371,6 +371,13 @@ button.crumb:hover { color:var(--gib-cyan); }
   border-left:none; border-right:none; cursor:pointer; font-family:var(--mono); padding:0; }
 .addlink:hover { color:var(--gib-cyan); border-color:var(--gib-cyan); }
 
+/* Bar color-zone presets: the chip's background IS the preset. */
+.zonechips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.zchip { font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-family:var(--mono);
+  font-weight:600; color:#101014; border:1px solid var(--gib-line); border-radius:2px;
+  padding:3px 8px; cursor:pointer; transition:border-color .12s, box-shadow .12s; }
+.zchip:hover { border-color:var(--gib-cyan); box-shadow:0 0 8px rgba(0,229,255,.35); }
+
 /* ── Preview terminal (the hero surface) ────────────────────────────────── */
 /* The header + green edge glow exist to pull the eye here: the canvas chips wear the
    theme's colors too, so the actual output needs to outshine them. */
