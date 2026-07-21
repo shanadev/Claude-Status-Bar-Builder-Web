@@ -382,6 +382,275 @@
         "fontFamily": "CaskaydiaCove NFM",
         "background": "#0b0410"
       }
+    },
+    {
+      "name": "Claude-ish",
+      "author": "shanadev",
+      "date": "2026-07-21",
+      "theme": {
+        "rows": [
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "directory",
+                "fg": "#f4f3ee",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "full",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "gitBranch",
+                "label": "",
+                "fg": "#f4f3ee",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "cost",
+                "fg": "#f4f3ee",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "4dp",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "burnRate",
+                "label": "",
+                "fg": "#f4f3ee",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "spacer",
+                "text": "2",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              }
+            ],
+            "separator": "dot",
+            "caps": "none",
+            "separatorFg": "#c15f3c"
+          },
+          {
+            "segments": [],
+            "separator": "backslant",
+            "caps": "round"
+          },
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "contextTokens",
+                "label": "",
+                "icon": "\uD83E\uDD2A",
+                "fg": "#f4f3ee",
+                "bg": "#c15f3c",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "option": "withMax",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "contextPercent",
+                "label": "",
+                "icon": "",
+                "fg": "#f4f3ee",
+                "bg": "#c15f3c",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "1dp",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "contextPercent",
+                "label": "",
+                "icon": "",
+                "iconSpace": true,
+                "fg": "#f4f3ee",
+                "bg": "#b1ada1",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "hidden",
+                "hideWhenMissing": true,
+                "bar": {
+                  "width": 10,
+                  "filledChar": "\u2588",
+                  "emptyChar": " ",
+                  "smooth": true,
+                  "filledFg": "#c15f3c",
+                  "emptyFg": "#3b4261"
+                }
+              },
+              {
+                "thresholds": [],
+                "element": "spacer",
+                "text": "2",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit5h",
+                "label": "",
+                "icon": "\uD83D\uDD54",
+                "fg": "#f4f3ee",
+                "bg": "#c15f3c",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "1dp",
+                "option": "time",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit5h",
+                "label": "",
+                "fg": "#f4f3ee",
+                "bg": "#b1ada1",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "hidden",
+                "option": "time",
+                "hideWhenMissing": true,
+                "bar": {
+                  "width": 10,
+                  "filledChar": "\u2588",
+                  "emptyChar": " ",
+                  "smooth": true,
+                  "filledFg": "#c15f3c",
+                  "emptyFg": "#3b4261"
+                }
+              },
+              {
+                "thresholds": [],
+                "element": "spacer",
+                "text": "2",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit7d",
+                "label": "",
+                "icon": "\uD83D\uDCC5",
+                "fg": "#f4f3ee",
+                "bg": "#c15f3c",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "1dp",
+                "option": "time",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "limit7d",
+                "label": "",
+                "icon": "",
+                "fg": "#f4f3ee",
+                "bg": "#b1ada1",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "hidden",
+                "option": "time",
+                "hideWhenMissing": true,
+                "bar": {
+                  "width": 10,
+                  "filledChar": "\u2588",
+                  "emptyChar": " ",
+                  "smooth": true,
+                  "filledFg": "#c15f3c",
+                  "emptyFg": "#3b4261"
+                }
+              }
+            ],
+            "separator": "round",
+            "caps": "round",
+            "separatorFg": "#ffffff"
+          },
+          {
+            "segments": [],
+            "separator": "backslant",
+            "caps": "round"
+          },
+          {
+            "segments": [
+              {
+                "thresholds": [],
+                "element": "model",
+                "label": "",
+                "icon": "\uD83D\uDC7E",
+                "fg": "#c15f3c",
+                "bg": "#f4f3ee",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "format": "id",
+                "hideWhenMissing": true
+              },
+              {
+                "thresholds": [],
+                "element": "effort",
+                "label": "",
+                "icon": "",
+                "fg": "#ffffff",
+                "bg": "#c15f3c",
+                "bold": false,
+                "dim": false,
+                "italic": false,
+                "underline": false,
+                "hideWhenMissing": true
+              }
+            ],
+            "separator": "backslant",
+            "caps": "round"
+          }
+        ],
+        "name": "Claude-ish",
+        "fontFamily": "CaskaydiaCove NFM",
+        "background": "#101014"
+      }
     }
   ]
 }
