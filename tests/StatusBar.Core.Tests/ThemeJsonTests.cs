@@ -45,12 +45,15 @@ public class ThemeJsonTests
         });
         var lean = theme.ToJson();
         Assert.DoesNotContain("sectionCaps", lean);
+        Assert.DoesNotContain("sectionSeparator", lean);
         Assert.DoesNotContain("matchFg", lean);
 
         theme.Rows[0].Segments[0].SectionCaps = CapStyle.Slant;
+        theme.Rows[0].Segments[0].SectionSeparator = SeparatorStyle.Dot;
         theme.Rows[0].Segments[0].Bar!.MatchFg = true;
         var reloaded = Theme.FromJson(theme.ToJson());
         Assert.Equal(CapStyle.Slant, reloaded.Rows[0].Segments[0].SectionCaps);
+        Assert.Equal(SeparatorStyle.Dot, reloaded.Rows[0].Segments[0].SectionSeparator);
         Assert.True(reloaded.Rows[0].Segments[0].Bar!.MatchFg);
     }
 }

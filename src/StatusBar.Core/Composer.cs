@@ -98,7 +98,12 @@ public static class Composer
 
     static (string Ansi, int Width) RenderChain(List<RenderedSegment> chain, Row row)
     {
-        var (sepGlyph, solid) = Seps[row.Separator];
+        // Sections can override the row's separator (same first-set-wins rule as caps
+        // below). Solid vs thin layout follows the override for the whole chain.
+        var sepStyle = row.Separator;
+        foreach (var c in chain)
+            if (c.SectionSeparator is SeparatorStyle ss) { sepStyle = ss; break; }
+        var (sepGlyph, solid) = Seps[sepStyle];
         var sb = new StringBuilder();
         int width = 0;
 

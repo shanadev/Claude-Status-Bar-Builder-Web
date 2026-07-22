@@ -59,6 +59,34 @@
         }
 
         <div class="sect">
+            <div class="s-lab"><span>section</span></div>
+            <div class="selrow">
+                <span class="k">separator</span>
+                <select value="@(seg.SectionSeparator?.ToString() ?? "row")"
+                        @onchange="e => SetSectionSeparator(seg, e.Value?.ToString())">
+                    <option value="row">row default</option>
+                    @foreach (var s in Enum.GetValues<SeparatorStyle>())
+                    {
+                        <option value="@s">@SepName(s)</option>
+                    }
+                </select>
+            </div>
+            <div class="selrow">
+                <span class="k">end caps</span>
+                <select value="@(seg.SectionCaps?.ToString() ?? "row")"
+                        @onchange="e => SetSectionCaps(seg, e.Value?.ToString())">
+                    <option value="row">row default</option>
+                    @foreach (var c in Enum.GetValues<CapStyle>())
+                    {
+                        <option value="@c">@c.ToString().ToLowerInvariant()</option>
+                    }
+                </select>
+            </div>
+            <p class="t-small">a section is a run of chips between spacers &#8212; the first chip
+            in the section that sets a style here restyles the whole section</p>
+        </div>
+
+        <div class="sect">
             <div class="s-lab"><span>colors</span>
                 <button type="button" class="reset" title="reset colors"
                         @onclick="() => { seg.Fg = seg.Bg = seg.IconFg = seg.LabelFg = seg.ValueFg = null; State.Notify(); }">&#8634;</button>
@@ -296,23 +324,6 @@
         }
 
         <div class="sect">
-            <div class="s-lab"><span>section</span></div>
-            <div class="selrow">
-                <span class="k">end caps</span>
-                <select value="@(seg.SectionCaps?.ToString() ?? "row")"
-                        @onchange="e => SetSectionCaps(seg, e.Value?.ToString())">
-                    <option value="row">row default</option>
-                    @foreach (var c in Enum.GetValues<CapStyle>())
-                    {
-                        <option value="@c">@c.ToString().ToLowerInvariant()</option>
-                    }
-                </select>
-            </div>
-            <p class="t-small">a section is a run of chips between spacers &#8212; the first chip
-            in the section that sets a cap style restyles the whole section's capsule</p>
-        </div>
-
-        <div class="sect">
             <button type="button" class="toggle @(seg.HideWhenMissing ? "on" : null)"
                     @onclick="() => { seg.HideWhenMissing = !seg.HideWhenMissing; State.Notify(); }">
                 <span class="tk"></span>hide when zero / absent
@@ -417,6 +428,12 @@ else
     void SetSectionCaps(Segment seg, string? v)
     {
         seg.SectionCaps = v is null or "row" ? null : Enum.Parse<CapStyle>(v);
+        State.Notify();
+    }
+
+    void SetSectionSeparator(Segment seg, string? v)
+    {
+        seg.SectionSeparator = v is null or "row" ? null : Enum.Parse<SeparatorStyle>(v);
         State.Notify();
     }
 

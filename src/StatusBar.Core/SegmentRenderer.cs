@@ -16,6 +16,7 @@ public sealed class RenderedSegment
     public string? Fg { get; init; }
     public string? Bg { get; init; }
     public CapStyle? SectionCaps { get; init; } // carried through for the Composer's chain caps
+    public SeparatorStyle? SectionSeparator { get; init; } // likewise, for the chain's separator
 }
 
 public static class SegmentRenderer
@@ -96,7 +97,11 @@ public static class SegmentRenderer
                     Underline = runs[r].Underline || seg.Underline,
                 };
 
-        return new RenderedSegment { Runs = runs, Fg = fg, Bg = bg, SectionCaps = seg.SectionCaps };
+        return new RenderedSegment
+        {
+            Runs = runs, Fg = fg, Bg = bg,
+            SectionCaps = seg.SectionCaps, SectionSeparator = seg.SectionSeparator,
+        };
     }
 
     /// <summary>Produces the segment's value text, percent (for bars/thresholds), and custom-colored runs.</summary>

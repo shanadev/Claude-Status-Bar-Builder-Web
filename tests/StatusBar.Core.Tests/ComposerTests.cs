@@ -76,4 +76,47 @@ public class ComposerTests
         Assert.NotEqual(Compose(Mixed(CapStyle.Chevron, null)), mixed); // first section restyled
         Assert.NotEqual(Compose(Mixed(CapStyle.Round, null)), mixed);   // second section untouched
     }
+
+    // --- Section separator: Segment.SectionSeparator overrides Row.Separator with the
+    // same first-set-wins rule, and the section's whole solid/thin layout follows it.
+    // Pinned by equivalence with the row-level separator, like the caps tests above.
+
+    static Segment SepChip(string text, SeparatorStyle? sep = null) =>
+        new() { Element = ElementKind.Text, Text = text, Bg = "#333333", Fg = "#eeeeee", SectionSeparator = sep };
+
+    static Row SepRow(SeparatorStyle sep, params Segment[] segs)
+    {
+        var row = new Row { Separator = sep };
+        foreach (var s in segs) row.Segments.Add(s);
+        return row;
+    }
+
+    [Fact]
+    public void Section_separator_override_matches_row_level_equivalent()
+    {
+        // Thin override on a solid row: the whole section drops to the thin layout.
+        Assert.Equal(
+            Compose(SepRow(SeparatorStyle.Dot, SepChip("a"), SepChip("b"))),
+            Compose(SepRow(SeparatorStyle.Chevron, SepChip("a", SeparatorStyle.Dot), SepChip("b"))));
+    }
+
+    [Fact]
+    public void Thin_row_section_can_go_solid()
+    {
+        Assert.Equal(
+            Compose(SepRow(SeparatorStyle.Round, SepChip("a"), SepChip("b"))),
+            Compose(SepRow(SeparatorStyle.Pipe, SepChip("a", SeparatorStyle.Round), SepChip("b"))));
+    }
+
+    [Fact]
+    public void Sections_carry_their_own_separator()
+    {
+        Row Mixed(SeparatorStyle rowSep, SeparatorStyle? firstSection) => SepRow(rowSep,
+            SepChip("a", firstSection), SepChip("a2"),
+            new Segment { Element = ElementKind.Spacer, Text = "2" },
+            SepChip("b"), SepChip("b2"));
+        var mixed = Compose(Mixed(SeparatorStyle.Chevron, SeparatorStyle.Dot));
+        Assert.NotEqual(Compose(Mixed(SeparatorStyle.Chevron, null)), mixed); // first section restyled
+        Assert.NotEqual(Compose(Mixed(SeparatorStyle.Dot, null)), mixed);     // second section untouched
+    }
 }

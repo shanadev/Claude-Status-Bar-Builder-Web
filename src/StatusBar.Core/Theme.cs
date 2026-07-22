@@ -86,6 +86,9 @@ public partial class Segment : ObservableObject
     // Overrides Row.Caps for the capsule (spacer-split section) this segment sits in;
     // first segment in the section that sets one wins. Null = row default.
     [ObservableProperty] private CapStyle? _sectionCaps;
+    // Overrides Row.Separator for the section, same first-set-wins rule. The section's
+    // whole layout follows: a thin override on a solid row drops that section's capsule.
+    [ObservableProperty] private SeparatorStyle? _sectionSeparator;
     [ObservableProperty] private BarOptions? _bar;
     public ObservableCollection<ThresholdRule> Thresholds { get; set; } = new();
 }
