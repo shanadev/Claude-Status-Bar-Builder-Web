@@ -197,6 +197,14 @@
                 @if (seg.Bar is BarOptions bar)
                 {
                     <div class="selrow">
+                        <span class="k">text fg</span>
+                        <button type="button" class="toggle @(bar.MatchFg ? "on" : null)"
+                                title="icon, label, and value text take the fill tip's current color &#8212; follows thresholds, zones, and gradients"
+                                @onclick="() => { bar.MatchFg = !bar.MatchFg; State.Notify(); }">
+                            <span class="tk"></span>match current bar color
+                        </button>
+                    </div>
+                    <div class="selrow">
                         <span class="k">width</span>
                         <input type="number" min="2" max="60" value="@bar.Width"
                                @onchange="e => { if (int.TryParse(e.Value?.ToString(), out var n)) bar.Width = Math.Clamp(n, 2, 60); State.Notify(); }" />
@@ -286,6 +294,23 @@
                 <button type="button" class="addlink" @onclick="() => AddStop(seg)">+ add stop</button>
             </div>
         }
+
+        <div class="sect">
+            <div class="s-lab"><span>section</span></div>
+            <div class="selrow">
+                <span class="k">end caps</span>
+                <select value="@(seg.SectionCaps?.ToString() ?? "row")"
+                        @onchange="e => SetSectionCaps(seg, e.Value?.ToString())">
+                    <option value="row">row default</option>
+                    @foreach (var c in Enum.GetValues<CapStyle>())
+                    {
+                        <option value="@c">@c.ToString().ToLowerInvariant()</option>
+                    }
+                </select>
+            </div>
+            <p class="t-small">a section is a run of chips between spacers &#8212; the first chip
+            in the section that sets a cap style restyles the whole section's capsule</p>
+        </div>
 
         <div class="sect">
             <button type="button" class="toggle @(seg.HideWhenMissing ? "on" : null)"
@@ -388,6 +413,12 @@ else
         Part.Value => seg.ValueFg,
         _ => seg.Fg,
     };
+
+    void SetSectionCaps(Segment seg, string? v)
+    {
+        seg.SectionCaps = v is null or "row" ? null : Enum.Parse<CapStyle>(v);
+        State.Notify();
+    }
 
     void SetPartFg(Segment seg, string? v)
     {

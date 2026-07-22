@@ -15,6 +15,7 @@ public sealed class RenderedSegment
     public required List<StyledRun> Runs { get; init; }
     public string? Fg { get; init; }
     public string? Bg { get; init; }
+    public CapStyle? SectionCaps { get; init; } // carried through for the Composer's chain caps
 }
 
 public static class SegmentRenderer
@@ -58,7 +59,14 @@ public static class SegmentRenderer
 
         if (icon.Length > 0) { Add(seg.IconSpace ? icon + " " : icon, seg.IconFg); }
         if (label.Length > 0) { Space(); Add(label, seg.LabelFg); }
-        if (seg.Bar is BarOptions bar && percent is double pv) { Space(); AddBar(runs, bar, pv, seg, fg); }
+        int barStart = runs.Count, barEnd = runs.Count;
+        string? barTip = null;
+        if (seg.Bar is BarOptions bar && percent is double pv)
+        {
+            Space(); barStart = runs.Count;
+            barTip = AddBar(runs, bar, pv, seg, fg);
+            barEnd = runs.Count;
+        }
         if (!hideValueText)
         {
             if (customRuns is not null) { Space(); runs.AddRange(customRuns); }
@@ -66,6 +74,16 @@ public static class SegmentRenderer
         }
 
         if (runs.Count == 0) return null;
+
+        // Bar-matched foreground: every run outside the bar itself takes the fill tip's
+        // color, overriding static fg and per-part overrides — matching means matching.
+        if (seg.Bar is { MatchFg: true } && barTip is string tip)
+        {
+            fg = tip;
+            for (int r = 0; r < runs.Count; r++)
+                if (r < barStart || r >= barEnd)
+                    runs[r] = runs[r] with { Fg = tip };
+        }
 
         // Segment-level text attributes apply to every run.
         if (seg.Bold || seg.Dim || seg.Italic || seg.Underline)
@@ -78,7 +96,7 @@ public static class SegmentRenderer
                     Underline = runs[r].Underline || seg.Underline,
                 };
 
-        return new RenderedSegment { Runs = runs, Fg = fg, Bg = bg };
+        return new RenderedSegment { Runs = runs, Fg = fg, Bg = bg, SectionCaps = seg.SectionCaps };
     }
 
     /// <summary>Produces the segment's value text, percent (for bars/thresholds), and custom-colored runs.</summary>
@@ -281,7 +299,9 @@ public static class SegmentRenderer
     // Sub-character fill: index = eighths of a cell (1-7), full block handled separately.
     static readonly string[] Eighths = { "", "▏", "▎", "▍", "▌", "▋", "▊", "▉" };
 
-    static void AddBar(List<StyledRun> runs, BarOptions bar, double percent, Segment seg, string? effFg)
+    /// <summary>Appends the bar's runs and returns the fill tip's color — the color of the
+    /// last painted fill cell (at 0%, the color the first cell would have).</summary>
+    static string? AddBar(List<StyledRun> runs, BarOptions bar, double percent, Segment seg, string? effFg)
     {
         int width = Math.Max(1, bar.Width);
         string?[] cellFg = CellColors(bar, width, seg.ValueFg ?? effFg);
@@ -290,8 +310,14 @@ public static class SegmentRenderer
         int full = (int)Math.Floor(cellsExact);
         double frac = cellsExact - full;
 
+        int lastFilled = full - 1;
+        if (full < width && bar.Smooth && bar.FilledChar == "█" && (int)Math.Round(frac * 8) > 0)
+            lastFilled = full; // the sub-character partial cell is the tip
+        string? tip = cellFg[Math.Clamp(lastFilled, 0, width - 1)];
+        string? chrome = bar.MatchFg ? tip : seg.ValueFg ?? effFg;
+
         if (bar.Brackets is { Length: >= 2 })
-            runs.Add(new StyledRun(bar.Brackets[0].ToString(), seg.ValueFg ?? effFg));
+            runs.Add(new StyledRun(bar.Brackets[0].ToString(), chrome));
 
         int cell = 0;
         for (; cell < full; cell++)
@@ -309,7 +335,9 @@ public static class SegmentRenderer
                 bar.TintTrack ? Dimmed(cellFg[cell]) ?? bar.EmptyFg : bar.EmptyFg));
 
         if (bar.Brackets is { Length: >= 2 })
-            runs.Add(new StyledRun(bar.Brackets[1].ToString(), seg.ValueFg ?? effFg));
+            runs.Add(new StyledRun(bar.Brackets[1].ToString(), chrome));
+
+        return tip;
     }
 
     /// <summary>

@@ -26,6 +26,11 @@ public partial class Theme : ObservableObject
     [ObservableProperty] private string _fontFamily = "CaskaydiaCove NFM";
     [ObservableProperty] private string _background = "#101014";
     public ObservableCollection<Row> Rows { get; set; } = new();
+    // The working palette offered as swatches in every color field. First-class data:
+    // colors persist whether or not anything currently uses them, so a stolen palette
+    // survives restyling. Null = pre-palette theme; the builder seeds it from the
+    // colors in use on load. Hex strings only ("#rrggbb").
+    public ObservableCollection<string>? Palette { get; set; }
 
     public static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -78,6 +83,9 @@ public partial class Segment : ObservableObject
     [ObservableProperty] private string? _format;  // element-specific primary format key
     [ObservableProperty] private string? _option;  // element-specific secondary option key
     [ObservableProperty] private bool _hideWhenMissing = true;
+    // Overrides Row.Caps for the capsule (spacer-split section) this segment sits in;
+    // first segment in the section that sets one wins. Null = row default.
+    [ObservableProperty] private CapStyle? _sectionCaps;
     [ObservableProperty] private BarOptions? _bar;
     public ObservableCollection<ThresholdRule> Thresholds { get; set; } = new();
 }
@@ -96,6 +104,11 @@ public partial class BarOptions : ObservableObject
     [ObservableProperty]
     [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     private bool _tintTrack;                          // empty track = darkened zone color instead of EmptyFg
+    // Segment text (icon/label/value, brackets) takes the fill tip's current color, so the
+    // words track the bar through threshold/zone/gradient recolors. Default-off keeps JSON lean.
+    [ObservableProperty]
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    private bool _matchFg;
     public ObservableCollection<BarStop>? Stops { get; set; } // positional zones; null = legacy gradient/solid
 }
 

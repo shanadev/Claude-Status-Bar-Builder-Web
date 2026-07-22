@@ -84,10 +84,12 @@ public static class Composer
         }
         if (sb.Length == 0)
         {
-            // A row with no segments is a deliberate blank line: emit a single space,
-            // because Claude Code drops fully empty lines from statusline output. A row
+            // A row with no segments is a deliberate blank line. Claude Code drops lines
+            // that are empty or whitespace-only (space and NBSP both die), so emit a
+            // braille blank U+2800: not whitespace, width 1, renders as an empty cell.
+            // Verified against the real display 2026-07-21 (tools/test-blankline.js). A row
             // whose segments all hid at runtime collapses to "" — callers skip those.
-            if (row.Segments.Count == 0) sb.Append(' ');
+            if (row.Segments.Count == 0) sb.Append('\u2800');
             else return "";
         }
         sb.Append(Ansi.Reset);
@@ -112,8 +114,14 @@ public static class Composer
 
         if (solid)
         {
-            if (row.Caps != CapStyle.None)
-                Emit(Caps[row.Caps].Left, chain[0].Bg, null);
+            // Spacer-split sections can override the row's cap style: the first segment
+            // in this chain that sets SectionCaps wins (None = explicitly capless).
+            var caps = row.Caps;
+            foreach (var c in chain)
+                if (c.SectionCaps is CapStyle sc) { caps = sc; break; }
+
+            if (caps != CapStyle.None)
+                Emit(Caps[caps].Left, chain[0].Bg, null);
 
             for (int idx = 0; idx < chain.Count; idx++)
             {
@@ -124,8 +132,8 @@ public static class Composer
 
                 if (idx < chain.Count - 1)
                     Emit(sepGlyph, seg.Bg, chain[idx + 1].Bg);
-                else if (row.Caps != CapStyle.None)
-                    Emit(Caps[row.Caps].Right, seg.Bg, null);
+                else if (caps != CapStyle.None)
+                    Emit(Caps[caps].Right, seg.Bg, null);
             }
         }
         else

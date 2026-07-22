@@ -10,11 +10,14 @@
         <button type="button" class="sw none @(Value is null ? "on" : null)" title="none / terminal default"
                 @onclick="() => Set(null)"></button>
     }
-    @foreach (var hex in ThemeSwatches)
+    @foreach (var hex in PaletteSwatches)
     {
         var localHex = hex;
         <button type="button" class="sw @(IsOn(localHex) ? "on" : null)" style="background:@localHex"
-                title="@localHex" @onclick="() => Set(localHex)"></button>
+                title="@localHex &#183; right-click to remove from palette"
+                @onclick="() => Set(localHex)"
+                @oncontextmenu="() => State.RemovePaletteColor(localHex)"
+                @oncontextmenu:preventDefault></button>
     }
     <span class="hexfield">
         <input type="color" value="@(Ansi.ToHex(Value) ?? "#808080")"
@@ -30,18 +33,18 @@
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
     [Parameter] public bool AllowNone { get; set; } = true;
 
-    // First row of swatches = the palette this theme already uses (style-panel card).
-    IEnumerable<string> ThemeSwatches =>
-        State.Theme.Rows.SelectMany(r => r.Segments)
-            .SelectMany(s => new[] { s.Bg, s.Fg })
-            .Select(Ansi.ToHex)
-            .OfType<string>()
-            .Distinct()
-            .Take(8);
+    // Swatches = the theme's working palette: first-class, persisted with the theme,
+    // user-managed (new picks join it, right-click removes) — never derived from what
+    // happens to be in use, so stolen palettes survive restyling.
+    IEnumerable<string> PaletteSwatches => State.Theme.Palette ?? Enumerable.Empty<string>();
 
     bool IsOn(string hex) => string.Equals(Ansi.ToHex(Value), hex, StringComparison.OrdinalIgnoreCase);
 
-    Task Set(string? value) => ValueChanged.InvokeAsync(value);
+    Task Set(string? value)
+    {
+        if (value is not null) State.AddPaletteColor(value);
+        return ValueChanged.InvokeAsync(value);
+    }
 
     Task SetHexText(string? raw)
     {

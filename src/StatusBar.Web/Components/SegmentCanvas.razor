@@ -34,7 +34,7 @@
             }
             @if (State.Theme.Rows.Count > 1)
             {
-                <button type="button" title="remove this row (segments included)"
+                <button type="button" class="rowdel" title="remove this row (segments included)"
                         @onclick="() => State.RemoveRow(localRow)">&#215; row</button>
             }
         </div>

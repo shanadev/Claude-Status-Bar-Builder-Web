@@ -244,6 +244,8 @@ button.crumb:hover { color:var(--gib-cyan); }
 .rowlab.on .rowbtn { color:var(--gib-cyan); border-style:solid; border-color:var(--gib-cyan);
   box-shadow:0 0 10px rgba(0,229,255,.35); text-shadow:0 0 6px rgba(0,229,255,.5); }
 .rowlab .rowhint { color:var(--gib-dim); letter-spacing:.14em; }
+.rowlab .rowdel { margin-left:auto; margin-right:2px; }
+.rowlab .rowdel:hover { color:var(--gib-red); border-color:var(--gib-red); }
 
 .segrow { display:flex; align-items:stretch; flex-wrap:wrap; row-gap:14px; min-height:38px; }
 .segrow.rowselected { outline:2px solid var(--gib-cyan); outline-offset:6px; border-radius:2px;

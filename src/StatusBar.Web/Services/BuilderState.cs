@@ -64,6 +64,7 @@ public sealed class BuilderState : IDisposable
         {
             Theme = shared;
             RemixedFromLink = true;
+            EnsurePalette();
             Changed?.Invoke();
             return;
         }
@@ -71,9 +72,45 @@ public sealed class BuilderState : IDisposable
         var saved = await _js.InvokeAsync<string?>("sbGet", AutosaveKey);
         if (!string.IsNullOrEmpty(saved))
         {
-            try { Theme = Theme.FromJson(saved); Changed?.Invoke(); }
+            try { Theme = Theme.FromJson(saved); }
             catch { /* corrupt autosave — keep the default */ }
         }
+        EnsurePalette();
+        Changed?.Invoke();
+    }
+
+    /// <summary>Pre-palette themes arrive with no palette: seed it from the colors in use.</summary>
+    void EnsurePalette()
+    {
+        if (Theme.Palette is { Count: > 0 }) return;
+        var seed = Theme.Rows.SelectMany(r => r.Segments)
+            .SelectMany(s => new[] { s.Bg, s.Fg })
+            .Select(Ansi.ToHex).OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (seed.Count > 0) Theme.Palette = new(seed);
+    }
+
+    /// <summary>Adds a color to the working palette, normalized to hex. Dupes are no-ops.</summary>
+    public void AddPaletteColor(string? spec)
+    {
+        if (TryAddPaletteColor(spec)) Notify();
+    }
+
+    bool TryAddPaletteColor(string? spec)
+    {
+        if (Ansi.ToHex(spec) is not string hex) return false;
+        Theme.Palette ??= new();
+        if (Theme.Palette.Any(p => string.Equals(p, hex, StringComparison.OrdinalIgnoreCase))) return false;
+        Theme.Palette.Add(hex);
+        return true;
+    }
+
+    public void RemovePaletteColor(string hex)
+    {
+        if (Theme.Palette?.FirstOrDefault(p => string.Equals(p, hex, StringComparison.OrdinalIgnoreCase))
+            is not string hit) return;
+        Theme.Palette.Remove(hit);
+        Notify();
     }
 
     async Task SaveNowAsync()
@@ -109,11 +146,19 @@ public sealed class BuilderState : IDisposable
     /// <summary>
     /// Recolors the current bar with another theme's palette — layout and elements stay.
     /// Segment bg/fg pairs cycle across the bar in order; per-part overrides are cleared
-    /// so they can't fight the new scheme.
+    /// so they can't fight the new scheme. The working palette is replaced with the
+    /// source's full color list, so every stolen color stays available even when the
+    /// current bar has too few segments to wear them all.
     /// </summary>
     public void ApplyPalette(Theme source)
     {
         Theme.Background = source.Background;
+        var stolen = (source.Palette is { Count: > 0 }
+                ? source.Palette.AsEnumerable()
+                : source.Rows.SelectMany(r => r.Segments).SelectMany(s => new[] { s.Bg, s.Fg }))
+            .Select(Ansi.ToHex).OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (stolen.Count > 0) Theme.Palette = new(stolen);
         var pairs = source.Rows.SelectMany(r => r.Segments)
             .Where(s => s.Element != ElementKind.Spacer && (s.Bg is not null || s.Fg is not null))
             .Select(s => (s.Bg, s.Fg)).ToList();
@@ -141,6 +186,7 @@ public sealed class BuilderState : IDisposable
         SelectedRow = null;
         Selected = null;
         RemixedFromLink = remixed;
+        EnsurePalette();
         Notify();
     }
 
@@ -184,6 +230,9 @@ public sealed class BuilderState : IDisposable
         var bg = NewSegmentBgs[_nextBg++ % NewSegmentBgs.Length];
         seg.Bg = bg;
         seg.Fg = Luma(bg) > 0.45 ? "#16161e" : "#c0caf5";
+        // Auto-assigned colors join the palette too (caller notifies).
+        TryAddPaletteColor(seg.Bg);
+        TryAddPaletteColor(seg.Fg);
     }
 
     static double Luma(string hex) =>
